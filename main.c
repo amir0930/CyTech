@@ -82,11 +82,13 @@ int choisirCibleAleatoire(Equipe adversaire) {
 
 //Carte
 typedef struct {
-    char nom[50];       // Nom de la carte
-    char description[100]; // Effet détaillé
-    int valeur;         // Valeur appliquée (ex: +20 attaque)
-    int duree;          // Nombre de tours actifs
+    char nom[50];
+    char description[100];
+    int effet_valeur;       // Valeur à appliquer (ex: +20 attaque)
+    int duree;              // Durée en tours
+    char type[20];          // Type de carte (ex: "Offensive", "Défensive")
 } Carte;
+
 
 //technique spéciale
 void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *technique) {
