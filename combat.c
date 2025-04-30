@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "combat.h"
+#include "structures.h" 
+
 void attaquer(Combattant *attaquant, Combattant *cible) {
     int degats = attaquant->attaque - cible->defense;
     if (degats > 0) {
