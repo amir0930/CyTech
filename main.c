@@ -139,6 +139,66 @@ void afficherMenu() {
     printf("3 - Voir les stats des combattants\n");
     printf("4 - Quitter\n");
 }
+// Fonction pour gérer les tours :
+
+void organiserTours(Equipe *equipe1, Equipe *equipe2, Combattant ordreCombat[], int *taille) {
+    int index = 0;
+
+    // Ajouter les combattants de chaque équipe à la liste d'ordre
+    for (int i = 0; i < equipe1->taille; i++) {
+        ordreCombat[index++] = equipe1->combattants[i];
+    }
+    for (int i = 0; i < equipe2->taille; i++) {
+        ordreCombat[index++] = equipe2->combattants[i];
+    }
+
+    *taille = index;
+
+    // Trier les combattants selon leur vitesse
+    qsort(ordreCombat, *taille, sizeof(Combattant), comparerVitesse);
+}
+
+
+// action attaques et techniques speciales 
+void effectuerTour(Combattant *attaquant, Equipe *equipeAdverse) {
+    int choix;
+    printf("%s : Que veux-tu faire ?\n", attaquant->nom);
+    printf("1 - Attaquer\n");
+    printf("2 - Utiliser une technique spéciale\n");
+    printf("Choix : ");
+    scanf("%d", &choix);
+
+    if (choix == 1) {
+        int cibleIndex;
+        printf("Choisir un adversaire (numéro) : ");
+        scanf("%d", &cibleIndex);
+
+        // Effectuer l'attaque
+        attaquer(attaquant, &equipeAdverse->combattants[cibleIndex]);
+    } else if (choix == 2) {
+        printf("Utilisation de technique spéciale non implémentée encore...\n");
+    } else {
+        printf("Choix invalide.\n");
+    }
+}
+
+// etat des equipes
+void afficherEtatEquipes(Equipe equipe1, Equipe equipe2) {
+    printf("\n--- État des équipes ---\n");
+
+    // Équipe 1
+    printf("Équipe 1 : %s\n", equipe1.nom);
+    for (int i = 0; i < equipe1.taille; i++) {
+        afficherBarreVie(equipe1.combattants[i]);
+    }
+
+    // Équipe 2
+    printf("Équipe 2 : %s\n", equipe2.nom);
+    for (int i = 0; i < equipe2.taille; i++) {
+        afficherBarreVie(equipe2.combattants[i]);
+    }
+}
+
 
 int main() {
     printf("\033[1;31m--- Combat CY-Fighters ---\033[0m\n");
@@ -166,6 +226,40 @@ int main() {
         }
     } while (choix != 4);
     
+    Combattant ordreCombat[10]; // Exemple : Max 10 combattants au total
+int tailleOrdre = 0;
+
+// Organiser les tours avant de commencer le combat
+organiserTours(&equipe1, &equipe2, ordreCombat, &tailleOrdre);
+printf("Ordre de combat établi !\n");
+    
+// Initialisation des équipes et des combattants
+    Equipe equipe1 = {"Équipe 1", {{"Naruto", 120, 120, 18, 12, 20, 15, 3}}, 1};
+    Equipe equipe2 = {"Équipe 2", {{"Sasuke", 100, 100, 20, 10, 15, 12, 2}}, 1};
+
+    Combattant ordreCombat[10];
+    int tailleOrdre = 0;
+
+    // Organiser les tours
+    organiserTours(&equipe1, &equipe2, ordreCombat, &tailleOrdre);
+
+    // Boucle principale de combat
+    int combatEnCours = 1;
+    while (combatEnCours) {
+        afficherEtatEquipes(equipe1, equipe2);
+
+        for (int i = 0; i < tailleOrdre; i++) {
+            if (ordreCombat[i].pv_courants > 0) {
+                effectuerTour(&ordreCombat[i], &equipe2);
+            }
+        }
+
+        // Vérifie si une équipe est éliminée
+        combatEnCours = (equipe1.taille > 0 && equipe2.taille > 0);
+    }
+
+    printf("Le combat est terminé !\n");
+
     return 0;
 }
 
