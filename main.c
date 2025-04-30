@@ -199,6 +199,103 @@ void afficherEtatEquipes(Equipe equipe1, Equipe equipe2) {
     }
 }
 
+// ATTAQUE DE L'IA
+void attaqueIA(Equipe *equipeIA, Equipe *equipeJoueur, int niveau) {
+    // Trouver une cible selon le niveau
+    int cibleIndex = 0;
+    switch (niveau) {
+        case 1:  // Niveau noob : attaque aléatoire
+            cibleIndex = rand() % equipeJoueur->taille;
+            break;
+
+        case 2:  // Niveau facile : cible le combattant le plus faible
+            for (int i = 1; i < equipeJoueur->taille; i++) {
+                if (equipeJoueur->combattants[i].pv_courants > 0 &&
+                    equipeJoueur->combattants[i].pv_courants < equipeJoueur->combattants[cibleIndex].pv_courants) {
+                    cibleIndex = i;
+                }
+            }
+            break;
+
+        case 3:  // Niveau moyen : utilise aussi des techniques spéciales si possible
+            if (rand() % 2 == 0) {  // 50% de chances d'utiliser une technique spéciale
+                printf("%s utilise une technique spéciale !\n", equipeIA->combattants[0].nom);
+                return;  // Ici, on simplifie avec juste une indication pour l'instant
+            }
+            // Sinon, cible le plus faible comme en "facile"
+            for (int i = 1; i < equipeJoueur->taille; i++) {
+                if (equipeJoueur->combattants[i].pv_courants > 0 &&
+                    equipeJoueur->combattants[i].pv_courants < equipeJoueur->combattants[cibleIndex].pv_courants) {
+                    cibleIndex = i;
+                }
+            }
+            break;
+
+        default:
+            printf("Niveau IA inconnu !\n");
+            return;
+    }
+
+    // Effectuer l'attaque
+    attaquer(&equipeIA->combattants[0], &equipeJoueur->combattants[cibleIndex]);
+}
+// APPLICATION ATTAQUE DE L'IA
+void appliquerTechnique(Technique *technique, Combattant *cible) {
+    if (technique->duree_effet > 0) {
+        cible->attaque += technique->valeur;  // Exemple : boost d'attaque
+        printf("%s subit l'effet de %s pour %d tours.\n", cible->nom, technique->nom, technique->duree_effet);
+    }
+}
+
+printf("%s utilise %s !\n", attaquant->nom, technique->nom);
+appliquerTechnique(technique, cible);
+
+// GESTION EFFET TEMPORAIRE
+void majEffets(Combattant *cible) {
+    for (int i = 0; i < 3; i++) {  // Maximum 3 effets actifs par combattant
+        if (cible->effets[i].tours_restants > 0) {
+            cible->effets[i].tours_restants--;
+
+            if (cible->effets[i].tours_restants == 0) {
+                printf("L'effet %s sur %s a expiré.\n", cible->effets[i].nom, cible->nom);
+                cible->attaque -= cible->effets[i].valeur;  // Retirer l'effet
+            }
+        }
+    }
+}
+
+//BARRE DE VIE
+void afficherBarreVie(Combattant c) {
+    printf("%s [", c.nom);
+
+    // Couleur selon le pourcentage de vie
+    int pourcentage = (c.pv_courants * 100) / c.pv_max;
+    if (pourcentage > 50) {
+        printf("\033[1;32m");  // Vert si PV > 50%
+    } else if (pourcentage > 20) {
+        printf("\033[1;33m");  // Jaune si 20% < PV <= 50%
+    } else {
+        printf("\033[1;31m");  // Rouge si PV <= 20%
+    }
+
+    // Dessiner la barre
+    for (int i = 0; i < c.pv_courants / 5; i++) printf("#");
+    printf("\033[0m");  // Réinitialiser les couleurs
+
+    printf("] (%d/%d PV)\n", c.pv_courants, c.pv_max);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 int main() {
     printf("\033[1;31m--- Combat CY-Fighters ---\033[0m\n");
