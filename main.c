@@ -89,6 +89,49 @@ typedef struct {
     char type[20];          // Type de carte (ex: "Offensive", "Défensive")
 } Carte;
 
+//fct pour les cartes
+void utiliserCarte(Carte *carte, Combattant *cible) {
+    printf("Activation de la carte : %s\n", carte->nom);
+    printf("Effet : %s\n", carte->description);
+
+//changer de cartes
+void chargerCartes(char *nomFichier, Carte liste[], int *taille) {
+    FILE *file = fopen(nomFichier, "r");
+    if (file == NULL) {
+        printf("Erreur de lecture du fichier %s\n", nomFichier);
+        return;
+    }
+
+    *taille = 0;
+    while (fscanf(file, "%[^;];%[^;];%d;%d;%s\n", liste[*taille].nom, liste[*taille].description,
+                  &liste[*taille].effet_valeur, &liste[*taille].duree, liste[*taille].type) == 5) {
+        (*taille)++;
+    }
+
+    fclose(file);
+}
+
+//utiliser les cartes
+    printf("3 - Jouer une carte\n");
+
+case 3: {
+    printf("Choisir une carte (0 à %d) : ", tailleCartes - 1);
+    int choixCarte;
+    scanf("%d", &choixCarte);
+
+    if (choixCarte >= 0 && choixCarte < tailleCartes) {
+        utiliserCarte(&cartes[choixCarte], &ordreCombat[i]);
+    } else {
+        printf("Choix de carte invalide.\n");
+    }
+}
+break;
+
+// Appliquer l'effet de la carte
+    cible->attaque += carte->effet_valeur;  // Exemple pour un boost d'attaque
+    printf("%s a gagné %d points d'attaque pour %d tours.\n", cible->nom, carte->effet_valeur, carte->duree);
+}
+
 
 //technique spéciale
 void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *technique) {
@@ -354,8 +397,81 @@ void chargerEquipe(char *nomFichier, Equipe *equipe) {
     printf("Équipe chargée depuis %s\n", nomFichier);
 }
 
+//Techniques spéciales avancées
+void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *technique) {
+    if (technique->recharge > 0) {
+        printf("%s ne peut pas encore utiliser %s (Recharge : %d tours).\n", 
+               attaquant->nom, technique->nom, technique->recharge);
+        return;
+    }
 
+    printf("%s utilise %s sur %s !\n", attaquant->nom, technique->nom, cible->nom);
+    appliquerEffet(cible, technique);
 
+    // Réinitialiser le temps de recharge
+    technique->recharge = 3;  // Par exemple, nécessite 3 tours pour réutilisation
+}
+
+void majRecharge(Technique *technique) {
+    if (technique->recharge > 0) {
+        technique->recharge--;
+    }
+}
+
+//Ajoute la gestion des durées des effets actifs sur les combattants.
+void majEffetsActifs(Combattant *combattant) {
+    for (int i = 0; i < 3; i++) { // Maximum 3 effets actifs
+        if (combattant->effets[i].tours_restants > 0) {
+            combattant->effets[i].tours_restants--;
+            if (combattant->effets[i].tours_restants == 0) {
+                printf("L'effet %s sur %s a expiré.\n", combattant->effets[i].nom, combattant->nom);
+                combattant->attaque -= combattant->effets[i].valeur;  // Exemple : retrait du bonus d'attaque
+            }
+        }
+    }
+}
+
+//Ajoute une logique pour jouer une carte avec ses effets spécifiques
+void utiliserCarte(Carte *carte, Combattant *cible) {
+    printf("Jouer la carte : %s\n", carte->nom);
+    printf("Effet : %s\n", carte->description);
+
+    // Appliquer l'effet
+    cible->attaque += carte->effet_valeur;  // Exemple : ajout d'attaque
+    printf("%s reçoit %d points d'attaque grâce à %s (durée : %d tours).\n", 
+           cible->nom, carte->effet_valeur, carte->nom, carte->duree);
+}
+
+void afficherCartesDisponibles(Carte cartes[], int tailleCartes) {
+    printf("Cartes disponibles :\n");
+    for (int i = 0; i < tailleCartes; i++) {
+        printf("%d - %s : %s (Effet : %d, Durée : %d tours)\n", 
+               i, cartes[i].nom, cartes[i].description, cartes[i].effet_valeur, cartes[i].duree);
+    }
+}
+
+void afficherBarreVieAvecEffets(Combattant *combattant) {
+    printf("%s [", combattant->nom);
+
+    int pourcentage = (combattant->pv_courants * 100) / combattant->pv_max;
+    if (pourcentage > 50) {
+        printf("\033[1;32m");  // Vert si PV > 50%
+    } else if (pourcentage > 20) {
+        printf("\033[1;33m");  // Jaune si 20% < PV <= 50%
+    } else {
+        printf("\033[1;31m");  // Rouge si PV <= 20%
+    }
+
+    for (int i = 0; i < combattant->pv_courants / 5; i++) printf("#");
+    printf("\033[0m] (%d/%d PV)\n", combattant->pv_courants, combattant->pv_max);
+
+    printf("Effets actifs :\n");
+    for (int i = 0; i < 3; i++) {
+        if (combattant->effets[i].tours_restants > 0) {
+            printf("- %s (%d tours restants)\n", combattant->effets[i].nom, combattant->effets[i].tours_restants);
+        }
+    }
+}
 
 
 int main() {
