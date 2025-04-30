@@ -1,0 +1,5 @@
+Boost de Force;Augmente l'attaque de 20;20;2;Offensive
+Bouclier Magique;Réduit les dégâts reçus de 30;30;3;Défensive
+Vent Rapide;Augmente la vitesse de 10;10;2;Stratégique
+Coup Fatal;Double les dégâts infligés pour un tour;0;1;Offensive
+Récupération;Soigne 50 points de vie;50;1;Défensive
