@@ -285,13 +285,72 @@ void afficherBarreVie(Combattant c) {
     printf("] (%d/%d PV)\n", c.pv_courants, c.pv_max);
 }
 
+//CREATION D'EQUIPE
+void creerEquipe(Equipe *equipe, Combattant combattantsDisponibles[], int nbCombattantsDispo) {
+    printf("Création de l'équipe : %s\n", equipe->nom);
+    equipe->taille = 0;
+
+    while (equipe->taille < 5) {  // Max 5 combattants par équipe (modifiable)
+        printf("\nListe des combattants disponibles :\n");
+        for (int i = 0; i < nbCombattantsDispo; i++) {
+            printf("%d - %s (PV : %d, Attaque : %d, Défense : %d, Vitesse : %d)\n", 
+                   i, combattantsDisponibles[i].nom, combattantsDisponibles[i].pv_max, 
+                   combattantsDisponibles[i].attaque, combattantsDisponibles[i].defense, 
+                   combattantsDisponibles[i].vitesse);
+        }
+
+        printf("Choisissez un combattant pour votre équipe (0 à %d) : ", nbCombattantsDispo - 1);
+        int choix;
+        scanf("%d", &choix);
+
+        if (choix >= 0 && choix < nbCombattantsDispo) {
+            equipe->combattants[equipe->taille++] = combattantsDisponibles[choix];
+            printf("%s ajouté à l'équipe.\n", combattantsDisponibles[choix].nom);
+        } else {
+            printf("Choix invalide, essayez encore.\n");
+        }
+    }
+}
 
 
+// CREATION D'UN FICHIER CONTENANT LES PERSO
+void sauvegarderEquipe(char *nomFichier, Equipe *equipe) {
+    FILE *file = fopen(nomFichier, "w");
+    if (file == NULL) {
+        printf("Erreur : Impossible de sauvegarder l'équipe dans %s\n", nomFichier);
+        return;
+    }
 
+    fprintf(file, "Équipe : %s\n", equipe->nom);
+    fprintf(file, "Taille : %d\n", equipe->taille);
 
+    for (int i = 0; i < equipe->taille; i++) {
+        Combattant c = equipe->combattants[i];
+        fprintf(file, "%s %d %d %d %d %d %d %d\n", c.nom, c.pv_courants, c.pv_max, c.attaque, c.defense, c.agilite, c.vitesse, c.nb_techniques);
+    }
 
+    fclose(file);
+    printf("Équipe sauvegardée dans %s\n", nomFichier);
+}
+// Fonction pour charger une équipe depuis un fichier :
+void chargerEquipe(char *nomFichier, Equipe *equipe) {
+    FILE *file = fopen(nomFichier, "r");
+    if (file == NULL) {
+        printf("Erreur : Impossible de charger l'équipe depuis %s\n", nomFichier);
+        return;
+    }
 
+    fscanf(file, "Équipe : %s\n", equipe->nom);
+    fscanf(file, "Taille : %d\n", &equipe->taille);
 
+    for (int i = 0; i < equipe->taille; i++) {
+        Combattant *c = &equipe->combattants[i];
+        fscanf(file, "%s %d %d %d %d %d %d %d", c->nom, &c->pv_courants, &c->pv_max, &c->attaque, &c->defense, &c->agilite, &c->vitesse, &c->nb_techniques);
+    }
+
+    fclose(file);
+    printf("Équipe chargée depuis %s\n", nomFichier);
+}
 
 
 
@@ -356,8 +415,25 @@ printf("Ordre de combat établi !\n");
     }
 
     printf("Le combat est terminé !\n");
+// Charger les combattants depuis un fichier
+Combattant combattantsDisponibles[10];  // Exemple : Max 10 combattants disponibles
+int nbCombattantsDispo = 0;
+chargerCombattants("combattants.txt", combattantsDisponibles, &nbCombattantsDispo);
 
+// Création des équipes
+Equipe equipe1 = {"Équipe 1"};
+Equipe equipe2 = {"Équipe 2"};
+
+printf("Joueur 1 : Créez votre équipe !\n");
+creerEquipe(&equipe1, combattantsDisponibles, nbCombattantsDispo);
+
+printf("Joueur 2 : Créez votre équipe !\n");
+creerEquipe(&equipe2, combattantsDisponibles, nbCombattantsDispo);
     return 0;
+
+
+
+
 }
 
 
