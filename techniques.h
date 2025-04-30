@@ -1,23 +1,10 @@
 #ifndef TECHNIQUES_H
 #define TECHNIQUES_H
-#include "structures.h" 
 
-void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *technique) {
-    if (technique->recharge > 0) {
-        printf("%s ne peut pas encore utiliser %s (Recharge : %d tours).\n", 
-               attaquant->nom, technique->nom, technique->recharge);
-        return;
-    }
+#include "structures.h"  // Pour accéder à Combattant, Technique
 
-    printf("%s utilise %s sur %s !\n", attaquant->nom, technique->nom, cible->nom);
-    appliquerEffet(cible, technique);
+void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *technique);
+void majRecharge(Technique *technique);
+void appliquerEffet(Combattant *cible, Technique *technique);  // Si applicable
 
-    // Réinitialiser le temps de recharge
-    technique->recharge = 3;  // Par exemple, nécessite 3 tours pour réutilisation
-}
-
-void majRecharge(Technique *technique) {
-    if (technique->recharge > 0) {
-        technique->recharge--;
-    }
-}
+#endif
