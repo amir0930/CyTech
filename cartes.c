@@ -33,11 +33,11 @@ void chargerCartes(char *nomFichier, Carte liste[], int *taille) {
     fclose(file);
 }
 
-
 void afficherCartesDisponibles(Carte cartes[], int tailleCartes) {
     printf("Cartes disponibles :\n");
     for (int i = 0; i < tailleCartes; i++) {
-        printf("%d - %s : %s (Effet : %d, Durée : %d tours)\n", 
-               i, cartes[i].nom, cartes[i].description, cartes[i].effet_valeur, cartes[i].duree);
+        printf("%d : %s (Effet : %d, Durée : %d tours)\n", 
+               i, cartes[i].nom, cartes[i].effet_valeur, cartes[i].duree);
     }
 }
+
