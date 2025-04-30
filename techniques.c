@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include "structures.h"
+#include "techniques.h"
+
 void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *technique) {
     if (technique->recharge > 0) {
         printf("%s ne peut pas encore utiliser %s (Recharge : %d tours).\n", 
@@ -12,4 +16,9 @@ void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *tech
     technique->recharge = 3;  // Par exemple, nécessite 3 tours pour réutilisation
 }
 
+void majRecharge(Technique *technique) {
+    if (technique->recharge > 0) {
+        technique->recharge--;
+    }
+}
 
