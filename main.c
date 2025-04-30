@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "combat.h"
+#include "techniques.h"
+#include "cartes.h"
 
 
 // Effets temporaires appliqués aux combattants
