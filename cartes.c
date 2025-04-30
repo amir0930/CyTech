@@ -3,9 +3,16 @@
 #include "structures.h"
 #include "cartes.h"
 
-void utiliserCarte(Carte *carte, Combattant *cible) {
-    printf("Activation de la carte : %s\n", carte->nom);
-    printf("Effet : %s\n", carte->description);
+void utiliserCarte(Carte carte, Combattant *cible) {
+    printf("Activation de la carte %s !\n", carte.nom);
+    printf("Effet : %s\n", carte.description);
+
+    // Application de l'effet
+    cible->attaque += carte.effet_valeur;  // Exemple : boost d'attaque
+    printf("%s reçoit %d points d'attaque grâce à %s (Durée : %d tours).\n", 
+           cible->nom, carte.effet_valeur, carte.nom, carte.duree);
+}
+
 
 //changer de cartes
 void chargerCartes(char *nomFichier, Carte liste[], int *taille) {
