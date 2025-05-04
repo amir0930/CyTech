@@ -182,6 +182,32 @@ void menuPrincipal(Equipe *joueur, Equipe *ia) {
     } while (choix != 3);
 }
 
+// Avant la boucle de tours :
+int nCartes;
+Deck *deck = init_deck(CARTES_FILE, &nCartes);
+Hand *mainJ = init_hand(5);
+Hand *mainIA = init_hand(5);
+
+// À chaque début de tour pour un joueur :
+draw_card(deck, mainJ);
+afficher_main(mainJ);
+printf("Index de la carte à jouer (-1 pour passer) : ");
+int ci; scanf("%d", &ci);
+if (ci >= 0) play_card(mainJ, ci, actif);
+
+// Pour l’IA, on peut simplement piocher et jouer aléatoirement :
+draw_card(deck, mainIA);
+if (mainIA->size > 0 && rand()%2 == 0) {
+    int ri = rand() % mainIA->size;
+    play_card(mainIA, ri, actifIA);
+}
+
+// Après le combat, libère la mémoire :
+free_deck(deck);
+free_hand(mainJ);
+free_hand(mainIA);
+
+
 int main(void) {
     srand((unsigned)time(NULL));
 
