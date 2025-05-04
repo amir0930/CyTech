@@ -1,10 +1,10 @@
 // cartes.c
-#include "cartes.h"   // doit contenir la déclaration de utiliserCarte
-#include "structures.h"
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-
+#include <stdio.h>      // pour FILE, fopen, fgets, sscanf, fclose, printf
+#include <stdlib.h>     // pour malloc, free, realloc, rand
+#include <string.h>     // pour strncpy, strcmp, memcpy
+#include <time.h>       // pour time
+#include "cartes.h"     // pour Carte, Deck, Hand, utiliserCarte, init_deck...
+#include "structures.h" // pour Combattant, Effet
 
 #define MAX_CARTES 100
 
@@ -24,7 +24,8 @@ Deck *init_deck(const char *filename, int *out_size) {
         Carte c;
         if (sscanf(line, "%49[^;];%99[^;];%d;%d;%19s",
                    c.nom, c.description,
-                   &c.effet_valeur, &c.duree, c.type) == 5) {
+                   &c.effet_valeur, &c.duree,
+                   c.type) == 5) {
             buffer[n++] = c;
         }
     }
@@ -77,7 +78,7 @@ void play_card(Hand *hand, int idx, Combattant *cible) {
     if (idx < 0 || idx >= hand->size) return;
     Carte c = hand->cards[idx];
 
-    // Applique l'effet de la carte
+    // Applique l’effet via la fonction déclarée dans cartes.h
     utiliserCarte(&c, cible);
 
     // Retire la carte de la main
