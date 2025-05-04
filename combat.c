@@ -1,13 +1,18 @@
 // combat.c
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <string.h>
 #include "combat.h"
-#include "techniques.h"    // <-- pour utiliserTechnique
+#include "techniques.h"
 
+#define C_RESET   "\033[0m"
+#define C_RED     "\033[1;31m"
+#define C_YELLOW  "\033[1;33m"
+#define C_CYAN    "\033[1;36m"
+
+// Compareur pour trier par vitesse décroissante
 static int comparerVitesse(const void *a, const void *b) {
-    const Combattant *A = a;
-    const Combattant *B = b;
+    const Combattant *A = a, *B = b;
     return B->vitesse - A->vitesse;
 }
 
@@ -15,11 +20,14 @@ void attaquer(Combattant *attaquant, Combattant *cible) {
     int degats = attaquant->attaque - cible->defense;
     if (degats > 0) {
         cible->pv_courants -= degats;
-        printf("%s attaque %s et inflige %d dégâts !\n",
-               attaquant->nom, cible->nom, degats);
+        printf("\n%s%s%s attaque %s%s%s et inflige %s%d%s degats !\n",
+               C_CYAN, attaquant->nom, C_RESET,
+               C_CYAN, cible->nom, C_RESET,
+               C_RED, degats, C_RESET);
     } else {
-        printf("%s attaque %s mais l'attaque est trop faible !\n",
-               attaquant->nom, cible->nom);
+        printf("\n%s%s%s attaque %s%s%s mais l'attaque est trop faible !\n",
+               C_CYAN, attaquant->nom, C_RESET,
+               C_CYAN, cible->nom, C_RESET);
     }
 }
 
@@ -33,78 +41,35 @@ void organiserTours(Equipe *e1, Equipe *e2, Combattant ordre[], int *n) {
 
 void majEffetsActifs(Combattant *c) {
     for (int i = 0; i < MAX_EFFETS; i++) {
-        Effet *e = &c->effets[i];
-        if (e->tours_restants > 0) {
-            e->tours_restants--;
-            if (e->tours_restants == 0) {
-                printf("L'effet %s sur %s a expiré.\n",
-                       e->nom, c->nom);
-                c->attaque -= e->valeur;
+        if (c->effets[i].tours_restants > 0) {
+            c->effets[i].tours_restants--;
+            if (c->effets[i].tours_restants == 0) {
+                printf("\n%sL'effet %s sur %s a expiré.%s\n",
+                       C_YELLOW, c->effets[i].nom, c->nom, C_RESET);
+                c->attaque -= c->effets[i].valeur;
             }
         }
-    }
-}
-
-int choisirCibleAleatoire(Equipe *adv) {
-    return rand() % adv->taille;
-}
-
-void attaqueIA(Equipe *ia, Equipe *joueur, int niveau) {
-    int idx = choisirCibleAleatoire(joueur);
-    switch (niveau) {
-        case 1:
-            attaquer(&ia->combattants[0], &joueur->combattants[idx]);
-            break;
-        case 2: {
-            int minPv = joueur->combattants[0].pv_courants;
-            for (int i = 1; i < joueur->taille; i++) {
-                int pv = joueur->combattants[i].pv_courants;
-                if (pv > 0 && pv < minPv) {
-                    minPv = pv;
-                    idx = i;
-                }
-            }
-            attaquer(&ia->combattants[0], &joueur->combattants[idx]);
-            break;
-        }
-        case 3: {
-            Technique *tech = ia->combattants[0].techniques;
-            if (tech->current_cd == 0 && rand() % 2 == 0) {
-                utiliserTechnique(&ia->combattants[0],
-                                  &joueur->combattants[idx],
-                                  tech);
-            } else {
-                attaquer(&ia->combattants[0],
-                         &joueur->combattants[idx]);
-            }
-            break;
-        }
-        default:
-            printf("Niveau IA inconnu !\n");
     }
 }
 
 void afficherBarreVieAvecEffets(Combattant *c) {
-    printf("%s [", c->nom);
     int pct = c->pv_courants * 100 / c->pv_max;
-    if (pct > 50)
-        printf("\033[1;32m");
-    else if (pct > 20)
-        printf("\033[1;33m");
-    else
-        printf("\033[1;31m");
+    const char *col = C_YELLOW;
+    if (pct > 50) col = C_CYAN;
+    else if (pct <= 20) col = C_RED;
 
-    for (int i = 0; i < c->pv_courants / 5; i++)
-        printf("#");
-    printf("\033[0m] (%d/%d PV)\n",
-           c->pv_courants, c->pv_max);
+    printf("\n%s%-10s %s[", C_CYAN, c->nom, C_RESET);
+    for (int i = 0; i < c->pv_courants / 5; i++) printf("%s#%s", col, C_RESET);
+    printf("] (%d/%d PV)\n", c->pv_courants, c->pv_max);
 
-    printf("Effets :\n");
+    // Effets actifs
+    int has = 0;
     for (int i = 0; i < MAX_EFFETS; i++) {
         if (c->effets[i].tours_restants > 0) {
-            printf("- %s (%d tours restants)\n",
-                   c->effets[i].nom,
-                   c->effets[i].tours_restants);
+            if (!has) { printf("   Effets :\n"); has = 1; }
+            printf("     - %s (%d tours restants)\n",
+                   c->effets[i].nom, c->effets[i].tours_restants);
         }
     }
+    if (!has) printf("   (pas d'effets actifs)\n");
 }
