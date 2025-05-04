@@ -134,7 +134,7 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             Combattant *actif = &ordre[t];
             if (actif->pv_courants <= 0) continue;
 
-            // ---- TEST mis à jour ----
+            // 1) repérer si c'est un combattant du joueur
             int isJoueur = 0;
             for (int i = 0; i < joueur->taille; i++) {
                 if (strcmp(joueur->combattants[i].nom,
@@ -143,14 +143,14 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                     break;
                 }
             }
-            // -------------------------
 
             printf("\n>>> Tour de %s <<<\n", actif->nom);
 
             if (isJoueur) {
-                // Interaction pour le joueur
+                // --- Tour interactif ---
                 draw_card(deck, mainJ);
                 afficher_main(mainJ);
+
                 printf("Carte a jouer (-1 passer) : ");
                 int ci; scanf("%d", &ci);
                 if (ci >= 0 && ci < mainJ->size)
@@ -162,35 +162,37 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                     attaquer(actif, &ia->combattants[idx]);
 
             } else {
-                // IA agit automatiquement
+                // --- Tour de l'IA ---
                 draw_card(deck, mainIA);
+
+                // IA joue éventuellement une carte
                 if (mainIA->size > 0 && rand() % 2 == 0) {
                     int ri = rand() % mainIA->size;
                     play_card(mainIA, ri, actif);
                 }
-                attaqueIA(ia, joueur, 2);
+                // IA attaque avec le combattant actif
+                int cibleIdx = choisirCibleAleatoire(*joueur);
+                attaquer(actif, &joueur->combattants[cibleIdx]);
             }
 
-            // Mise à jour des effets et cooldowns
+            // mise à jour des effets / cooldowns
             majEffetsActifs(actif);
             for (int ti = 0; ti < actif->nb_techniques; ti++) {
                 majRecharge(&actif->techniques[ti]);
             }
         }
 
-        // Purge des KO
+        // purge des KO dans chaque équipe
         int nj = 0;
-        for (int i = 0; i < joueur->taille; i++) {
+        for (int i = 0; i < joueur->taille; i++)
             if (joueur->combattants[i].pv_courants > 0)
                 joueur->combattants[nj++] = joueur->combattants[i];
-        }
         joueur->taille = nj;
 
         int ni = 0;
-        for (int i = 0; i < ia->taille; i++) {
+        for (int i = 0; i < ia->taille; i++)
             if (ia->combattants[i].pv_courants > 0)
                 ia->combattants[ni++] = ia->combattants[i];
-        }
         ia->taille = ni;
     }
 
