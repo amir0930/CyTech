@@ -1,9 +1,8 @@
-
-// Format : nom;description;effet_valeur;duree;type
-Boost_de_Force;Augmente l'attaque de 20 pour 3 tours;20;3;Buff
-Poing_de_Titan;Inflige 30 dégâts directs;30;1;Offensive
-Frappe_Eclair;Inflige 15 dégâts directs;15;1;Offensive
-Potion_de_Vie;Soigne 40 points de vie;40;1;Heal
-Soin_Intensif;Soigne 60 points de vie;60;1;Heal
-Transe_Guerriere;Augmente l'attaque de 25 pour 2 tours;25;2;Buff
-Rage_du_Guerrier;Augmente l'attaque de 30 pour 1 tour;30;1;Buff
+//nom;description;effet_valeur;duree;type
+Rasengan;Inflige 30 degats directs;30;1;Offensive
+Chidori;Inflige 35 degats directs;35;1;Offensive
+Bunshin;Crée 2 clones (+10 agilite);10;2;Buff
+Soin_Ninja;Soigne 40 PV;40;1;Defensive
+Substitution;Esquive la prochaine attaque;0;1;Defensive
+Chakra_Boost;Augmente l'attaque de 15;15;3;Buff
+Katon_Feu;Inflige 25 degats de feu;25;1;Offensive
