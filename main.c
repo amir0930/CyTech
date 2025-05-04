@@ -1,400 +1,206 @@
+// main.c
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#include "structures.h"
 #include "combat.h"
 #include "techniques.h"
 #include "cartes.h"
 
+#define MAX_DISPO 10
+#define MAX_ELEM  10    // max total combattants (e1 + e2)
+#define TEAM_SIZE 5
+#define CARTES_FILE "cartes.txt"
+#define COMBATS_FILE "combattants.txt"
 
-// Effets temporaires appliqués aux combattants
-typedef struct {
-    char nom[50];
-    int valeur;
-    int tours_restants;
-} EffetActif;
-
-// Structure des combattants
-typedef struct {
-    char nom[50];
-    int pv_courants;
-    int pv_max;
-    int attaque;
-    int defense;
-    int agilite;
-    int vitesse;
-    int nb_techniques;
-    EffetActif effets[3];  // Stocker jusqu'à 3 effets actifs
-} Combattant;
-
-
-// Structure pour une équipe
-typedef struct {
-    char nom[50];
-    Combattant combattants[5];  // Max 5 combattants par équipe, modifiable
-    int taille;
-} Equipe;
-
-// Structure pour les techniques spéciales
-typedef struct {
-    char nom[50];
-    int valeur;
-    char description[100];
-    int duree_effet;
-    int recharge;
-} Technique;
-
-// exemple de fichier
-//Sasuke 100 100 20 10 15 12 2
-//Naruto 120 120 18 12 20 15 3
-//Hinata 90 90 15 14 25 17 2
-
-//charger un combattant à partir d'un fichier
-void chargerCombattants(char *nomFichier, Combattant liste[], int *taille) {
-    FILE *file = fopen(nomFichier, "r");
-    if (file == NULL) {
-        printf("Erreur de lecture du fichier %s\n", nomFichier);
+// Charge les combattants depuis un fichier texte :
+// format par ligne : nom pv_max attaque defense agilite vitesse
+void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+        perror(filename);
+        *taille = 0;
         return;
     }
-
     *taille = 0;
-    while (fscanf(file, "%s %d %d %d %d %d %d %d", 
-                  liste[*taille].nom, &liste[*taille].pv_courants, 
-                  &liste[*taille].pv_max, &liste[*taille].attaque, 
-                  &liste[*taille].defense, &liste[*taille].agilite, 
-                  &liste[*taille].vitesse, &liste[*taille].nb_techniques) == 8) {
-        (*taille)++;
-    }
-
-    fclose(file);
-}
-
-
-//Si le joueur affronte un ordinateur
-int choisirCibleAleatoire(Equipe adversaire) {
-    return rand() % adversaire.taille;  // Cible aléatoire
-}
-
-//Carte
-typedef struct {
     char nom[50];
-    char description[100];
-    int effet_valeur;       // Valeur à appliquer (ex: +20 attaque)
-    int duree;              // Durée en tours
-    char type[20];          // Type de carte (ex: "Offensive", "Défensive")
-} Carte;
-
-
-
-// Appliquer l'effet de la carte
-    cible->attaque += carte->effet_valeur;  // Exemple pour un boost d'attaque
-    printf("%s a gagné %d points d'attaque pour %d tours.\n", cible->nom, carte->effet_valeur, carte->duree);
-}
-
-
-
-
-
-//effets sur plusieurs tours
-
-void majEffets(Combattant *cible) {
-    for (int i = 0; i < 3; i++) { // Supposons un max de 3 effets actifs
-        if (cible->effets[i].tours_restants > 0) {
-            cible->effets[i].tours_restants--;
-            if (cible->effets[i].tours_restants == 0) {
-                printf("L'effet %s sur %s a expiré.\n", cible->effets[i].nom, cible->nom);
-            }
-        }
+    int pv, atk, def, agi, vit;
+    while (fscanf(f, "%49s %d %d %d %d %d",
+                  nom, &pv, &atk, &def, &agi, &vit) == 6)
+    {
+        Combattant c;
+        strncpy(c.nom, nom, 50);
+        c.pv_max     = pv;
+        c.pv_courants = pv;
+        c.attaque    = atk;
+        c.defense    = def;
+        c.agilite    = agi;
+        c.vitesse    = vit;
+        c.nb_techniques = 0;
+        c.techniques = NULL;
+        for (int i = 0; i < MAX_EFFETS; i++)
+            c.effets[i].tours_restants = 0;
+        liste[(*taille)++] = c;
+        if (*taille >= MAX_DISPO) break;
     }
+    fclose(f);
 }
 
-//combat selon la vitesse des combattants
-int comparerVitesse(const void *a, const void *b) {
-    return ((Combattant*)b)->vitesse - ((Combattant*)a)->vitesse;
-}
-
-void trierEquipeParVitesse(Equipe *equipe) {
-    qsort(equipe->combattants, equipe->taille, sizeof(Combattant), comparerVitesse);
-}
-
-
-
-//barre de vie
-void afficherBarreVie(Combattant c) {
-    printf("%s [", c.nom);
-    for (int i = 0; i < c.pv_courants / 5; i++) printf("#");
-    printf("] (%d/%d PV)\n", c.pv_courants, c.pv_max);
-}
-
-void afficherMenu() {
-    printf("\nQue veux-tu faire ?\n");
-    printf("1 - Attaquer\n");
-    printf("2 - Utiliser une technique spéciale\n");
-    printf("3 - Voir les stats des combattants\n");
-    printf("4 - Quitter\n");
-}
-// Fonction pour gérer les tours :
-
-
-
-// action attaques et techniques speciales 
-void effectuerTour(Combattant *attaquant, Equipe *equipeAdverse) {
-    int choix;
-    printf("%s : Que veux-tu faire ?\n", attaquant->nom);
-    printf("1 - Attaquer\n");
-    printf("2 - Utiliser une technique spéciale\n");
-    printf("Choix : ");
-    scanf("%d", &choix);
-
-    if (choix == 1) {
-        int cibleIndex;
-        printf("Choisir un adversaire (numéro) : ");
-        scanf("%d", &cibleIndex);
-
-        // Effectuer l'attaque
-        attaquer(attaquant, &equipeAdverse->combattants[cibleIndex]);
-    } else if (choix == 2) {
-        printf("Utilisation de technique spéciale non implémentée encore...\n");
-    } else {
-        printf("Choix invalide.\n");
-    }
-}
-
-// etat des equipes
-void afficherEtatEquipes(Equipe equipe1, Equipe equipe2) {
-    printf("\n--- État des équipes ---\n");
-
-    // Équipe 1
-    printf("Équipe 1 : %s\n", equipe1.nom);
-    for (int i = 0; i < equipe1.taille; i++) {
-        afficherBarreVie(equipe1.combattants[i]);
-    }
-
-    // Équipe 2
-    printf("Équipe 2 : %s\n", equipe2.nom);
-    for (int i = 0; i < equipe2.taille; i++) {
-        afficherBarreVie(equipe2.combattants[i]);
-    }
-}
-
-
-    // Effectuer l'attaque
-    attaquer(&equipeIA->combattants[0], &equipeJoueur->combattants[cibleIndex]);
-}
-// APPLICATION ATTAQUE DE L'IA
-void appliquerTechnique(Technique *technique, Combattant *cible) {
-    if (technique->duree_effet > 0) {
-        cible->attaque += technique->valeur;  // Exemple : boost d'attaque
-        printf("%s subit l'effet de %s pour %d tours.\n", cible->nom, technique->nom, technique->duree_effet);
-    }
-}
-
-printf("%s utilise %s !\n", attaquant->nom, technique->nom);
-appliquerTechnique(technique, cible);
-
-// GESTION EFFET TEMPORAIRE
-void majEffets(Combattant *cible) {
-    for (int i = 0; i < 3; i++) {  // Maximum 3 effets actifs par combattant
-        if (cible->effets[i].tours_restants > 0) {
-            cible->effets[i].tours_restants--;
-
-            if (cible->effets[i].tours_restants == 0) {
-                printf("L'effet %s sur %s a expiré.\n", cible->effets[i].nom, cible->nom);
-                cible->attaque -= cible->effets[i].valeur;  // Retirer l'effet
-            }
-        }
-    }
-}
-
-//BARRE DE VIE
-void afficherBarreVie(Combattant c) {
-    printf("%s [", c.nom);
-
-    // Couleur selon le pourcentage de vie
-    int pourcentage = (c.pv_courants * 100) / c.pv_max;
-    if (pourcentage > 50) {
-        printf("\033[1;32m");  // Vert si PV > 50%
-    } else if (pourcentage > 20) {
-        printf("\033[1;33m");  // Jaune si 20% < PV <= 50%
-    } else {
-        printf("\033[1;31m");  // Rouge si PV <= 20%
-    }
-
-    // Dessiner la barre
-    for (int i = 0; i < c.pv_courants / 5; i++) printf("#");
-    printf("\033[0m");  // Réinitialiser les couleurs
-
-    printf("] (%d/%d PV)\n", c.pv_courants, c.pv_max);
-}
-
-//CREATION D'EQUIPE
-void creerEquipe(Equipe *equipe, Combattant combattantsDisponibles[], int nbCombattantsDispo) {
-    printf("Création de l'équipe : %s\n", equipe->nom);
+// Crée une équipe de taille TEAM_SIZE en choisissant parmi dispo[]
+void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
+    printf("Création de l'équipe %s\n", equipe->nom);
     equipe->taille = 0;
-
-    while (equipe->taille < 5) {  // Max 5 combattants par équipe (modifiable)
-        printf("\nListe des combattants disponibles :\n");
-        for (int i = 0; i < nbCombattantsDispo; i++) {
-            printf("%d - %s (PV : %d, Attaque : %d, Défense : %d, Vitesse : %d)\n", 
-                   i, combattantsDisponibles[i].nom, combattantsDisponibles[i].pv_max, 
-                   combattantsDisponibles[i].attaque, combattantsDisponibles[i].defense, 
-                   combattantsDisponibles[i].vitesse);
+    equipe->combattants = malloc(sizeof(Combattant) * TEAM_SIZE);
+    while (equipe->taille < TEAM_SIZE) {
+        printf("\nCombattants disponibles :\n");
+        for (int i = 0; i < nbDispo; i++) {
+            printf("%2d) %-10s (PV:%3d ATK:%2d DEF:%2d VIT:%2d)\n",
+                   i,
+                   dispo[i].nom,
+                   dispo[i].pv_max,
+                   dispo[i].attaque,
+                   dispo[i].defense,
+                   dispo[i].vitesse);
         }
-
-        printf("Choisissez un combattant pour votre équipe (0 à %d) : ", nbCombattantsDispo - 1);
+        printf("Choisissez un combattant (0-%d) : ", nbDispo - 1);
         int choix;
-        scanf("%d", &choix);
-
-        if (choix >= 0 && choix < nbCombattantsDispo) {
-            equipe->combattants[equipe->taille++] = combattantsDisponibles[choix];
-            printf("%s ajouté à l'équipe.\n", combattantsDisponibles[choix].nom);
+        if (scanf("%d", &choix) != 1) { getchar(); continue; }
+        if (choix >= 0 && choix < nbDispo) {
+            equipe->combattants[equipe->taille++] = dispo[choix];
+            printf("  -> %s ajouté(e).\n", dispo[choix].nom);
         } else {
-            printf("Choix invalide, essayez encore.\n");
+            printf("  Choix invalide.\n");
         }
     }
 }
 
-
-// CREATION D'UN FICHIER CONTENANT LES PERSO
-void sauvegarderEquipe(char *nomFichier, Equipe *equipe) {
-    FILE *file = fopen(nomFichier, "w");
-    if (file == NULL) {
-        printf("Erreur : Impossible de sauvegarder l'équipe dans %s\n", nomFichier);
-        return;
-    }
-
-    fprintf(file, "Équipe : %s\n", equipe->nom);
-    fprintf(file, "Taille : %d\n", equipe->taille);
-
-    for (int i = 0; i < equipe->taille; i++) {
-        Combattant c = equipe->combattants[i];
-        fprintf(file, "%s %d %d %d %d %d %d %d\n", c.nom, c.pv_courants, c.pv_max, c.attaque, c.defense, c.agilite, c.vitesse, c.nb_techniques);
-    }
-
-    fclose(file);
-    printf("Équipe sauvegardée dans %s\n", nomFichier);
-}
-// Fonction pour charger une équipe depuis un fichier :
-void chargerEquipe(char *nomFichier, Equipe *equipe) {
-    FILE *file = fopen(nomFichier, "r");
-    if (file == NULL) {
-        printf("Erreur : Impossible de charger l'équipe depuis %s\n", nomFichier);
-        return;
-    }
-
-    fscanf(file, "Équipe : %s\n", equipe->nom);
-    fscanf(file, "Taille : %d\n", &equipe->taille);
-
-    for (int i = 0; i < equipe->taille; i++) {
-        Combattant *c = &equipe->combattants[i];
-        fscanf(file, "%s %d %d %d %d %d %d %d", c->nom, &c->pv_courants, &c->pv_max, &c->attaque, &c->defense, &c->agilite, &c->vitesse, &c->nb_techniques);
-    }
-
-    fclose(file);
-    printf("Équipe chargée depuis %s\n", nomFichier);
+// Affiche l'état (barre de vie) des deux équipes
+void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
+    printf("\n--- État des équipes ---\n");
+    printf("%s :\n", e1->nom);
+    for (int i = 0; i < e1->taille; i++)
+        afficherBarreVieAvecEffets(&e1->combattants[i]);
+    printf("\n%s :\n", e2->nom);
+    for (int i = 0; i < e2->taille; i++)
+        afficherBarreVieAvecEffets(&e2->combattants[i]);
+    printf("-------------------------\n");
 }
 
+// Boucle de combat : pioche et joue cartes, puis attaque/IA
+void boucleCombat(Equipe *joueur, Equipe *ia) {
+    Combattant ordre[MAX_ELEM];
+    int nOrdre;
+    organiserTours(joueur, ia, ordre, &nOrdre);
 
+    // Charger les cartes disponibles
+    Carte deck[MAX_CARTES];
+    int nCartes;
+    chargerCartes(CARTES_FILE, deck, &nCartes);
 
-//Ajoute une logique pour jouer une carte avec ses effets spécifiques
-void utiliserCarte(Carte *carte, Combattant *cible) {
-    printf("Jouer la carte : %s\n", carte->nom);
-    printf("Effet : %s\n", carte->description);
+    while (joueur->taille > 0 && ia->taille > 0) {
+        afficherEtatEquipes(joueur, ia);
 
-    // Appliquer l'effet
-    cible->attaque += carte->effet_valeur;  // Exemple : ajout d'attaque
-    printf("%s reçoit %d points d'attaque grâce à %s (durée : %d tours).\n", 
-           cible->nom, carte->effet_valeur, carte->nom, carte->duree);
+        for (int i = 0; i < nOrdre; i++) {
+            Combattant *actif = &ordre[i];
+            if (actif->pv_courants <= 0) continue;
+
+            // Déterminer si c'est un joueur ou l'IA
+            int isJoueur = 0;
+            for (int j = 0; j < joueur->taille; j++)
+                if (actif == &joueur->combattants[j]) isJoueur = 1;
+
+            printf("\n>>> Tour de %s <<<\n", actif->nom);
+
+            if (isJoueur) {
+                // Afficher cartes et proposer d'en jouer une
+                afficherCartesDisponibles(deck, nCartes);
+                printf("Index carte à jouer (-1 pour passer) : ");
+                int ci; scanf("%d", &ci);
+                if (ci >= 0 && ci < nCartes)
+                    utiliserCarte(&deck[ci], actif);
+
+                // Attaque
+                printf("Sélectionnez une cible IA (0-%d) : ", ia->taille - 1);
+                int tidx; scanf("%d", &tidx);
+                if (tidx >= 0 && tidx < ia->taille)
+                    attaquer(actif, &ia->combattants[tidx]);
+            } else {
+                // Tour de l'IA : attaque simple
+                attaqueIA(ia, joueur, 2);  // niveau 2 facile
+            }
+
+            // Mettre à jour effets actifs
+            majEffetsActifs(actif);
+        }
+
+        // Nettoyer les KO : réduire taille d'équipe
+        int newJ = 0;
+        for (int i = 0; i < joueur->taille; i++)
+            if (joueur->combattants[i].pv_courants > 0)
+                joueur->combattants[newJ++] = joueur->combattants[i];
+        joueur->taille = newJ;
+
+        int newIA = 0;
+        for (int i = 0; i < ia->taille; i++)
+            if (ia->combattants[i].pv_courants > 0)
+                ia->combattants[newIA++] = ia->combattants[i];
+        ia->taille = newIA;
+    }
+
+    printf("\n=== Combat terminé ! ===\n");
+    if (joueur->taille > 0)
+        printf("Vous avez gagné !\n");
+    else
+        printf("L'IA a gagné...\n");
 }
 
-
-
-int main() {
-    printf("\033[1;31m--- Combat CY-Fighters ---\033[0m\n");
+// Menu principal
+void menuPrincipal(Equipe *joueur, Equipe *ia) {
     int choix;
     do {
-        afficherMenu();
-        printf("Choix : ");
+        printf("\n--- Menu ---\n"
+               "1) Lancer combat\n"
+               "2) Voir état équipes\n"
+               "3) Quitter\n"
+               "Votre choix : ");
         scanf("%d", &choix);
-
         switch (choix) {
             case 1:
-                printf("Attaque sélectionnée !\n");
+                boucleCombat(joueur, ia);
                 break;
             case 2:
-                printf("Technique spéciale en cours...\n");
+                afficherEtatEquipes(joueur, ia);
                 break;
             case 3:
-                printf("Affichage des combattants...\n");
-                break;
-            case 4:
-                printf("Fin du combat !\n");
+                printf("Au revoir !\n");
                 break;
             default:
-                printf("Choix invalide, essaie encore.\n");
+                printf("Choix invalide.\n");
         }
-    } while (choix != 4);
-    
-    Combattant ordreCombat[10]; // Exemple : Max 10 combattants au total
-int tailleOrdre = 0;
-
-// Organiser les tours avant de commencer le combat
-organiserTours(&equipe1, &equipe2, ordreCombat, &tailleOrdre);
-printf("Ordre de combat établi !\n");
-    
-// Initialisation des équipes et des combattants
-    Equipe equipe1 = {"Équipe 1", {{"Naruto", 120, 120, 18, 12, 20, 15, 3}}, 1};
-    Equipe equipe2 = {"Équipe 2", {{"Sasuke", 100, 100, 20, 10, 15, 12, 2}}, 1};
-
-    Combattant ordreCombat[10];
-    int tailleOrdre = 0;
-
-    // Organiser les tours
-    organiserTours(&equipe1, &equipe2, ordreCombat, &tailleOrdre);
-
-    // Boucle principale de combat
-    int combatEnCours = 1;
-    while (combatEnCours) {
-        afficherEtatEquipes(equipe1, equipe2);
-
-        for (int i = 0; i < tailleOrdre; i++) {
-            if (ordreCombat[i].pv_courants > 0) {
-                effectuerTour(&ordreCombat[i], &equipe2);
-            }
-        }
-
-        // Vérifie si une équipe est éliminée
-        combatEnCours = (equipe1.taille > 0 && equipe2.taille > 0);
-    }
-
-    printf("Le combat est terminé !\n");
-// Charger les combattants depuis un fichier
-Combattant combattantsDisponibles[10];  // Exemple : Max 10 combattants disponibles
-int nbCombattantsDispo = 0;
-chargerCombattants("combattants.txt", combattantsDisponibles, &nbCombattantsDispo);
-
-// Création des équipes
-Equipe equipe1 = {"Équipe 1"};
-Equipe equipe2 = {"Équipe 2"};
-
-printf("Joueur 1 : Créez votre équipe !\n");
-creerEquipe(&equipe1, combattantsDisponibles, nbCombattantsDispo);
-
-printf("Joueur 2 : Créez votre équipe !\n");
-creerEquipe(&equipe2, combattantsDisponibles, nbCombattantsDispo);
-    return 0;
-
-
-
-
+    } while (choix != 3);
 }
 
+int main(void) {
+    srand((unsigned)time(NULL));
 
+    // Charger combattants
+    Combattant dispo[MAX_DISPO];
+    int nbDispo;
+    chargerCombattants(COMBATS_FILE, dispo, &nbDispo);
 
+    // Créer équipes
+    Equipe joueur = { .nom = "Joueur", .taille = 0 };
+    Equipe ia     = { .nom = "IA",     .taille = 0 };
+    creerEquipe(&joueur, dispo, nbDispo);
+    creerEquipe(&ia,     dispo, nbDispo);
 
+    // Lancer le menu principal
+    menuPrincipal(&joueur, &ia);
 
-
-
-
-
-
-
-
+    // Libération mémoire
+    free(joueur.combattants);
+    free(ia.combattants);
+    return 0;
+}
