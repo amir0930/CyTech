@@ -1,9 +1,10 @@
 // cartes.c
-#include <stdio.h>
-#include <stdlib.h>
+#include "cartes.h"   // doit contenir la déclaration de utiliserCarte
+#include "structures.h"
 #include <string.h>
+#include <stdlib.h>
 #include <time.h>
-#include "cartes.h"
+
 
 #define MAX_CARTES 100
 
