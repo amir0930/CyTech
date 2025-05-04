@@ -94,7 +94,6 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int *nbDispo) {
             continue;
         }
 
-        // Ajout et retrait de la liste dispo
         printf("  %s-> %s ajoute%s\n",
                C_YELLOW, dispo[choix].nom, C_RESET);
         equipe->combattants[equipe->taille++] = dispo[choix];
@@ -177,7 +176,8 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                     int ri = rand() % mainIA->size;
                     play_card(mainIA, ri, actif);
                 }
-                int ci = choisirCibleAleatoire(*joueur);
+                // <- ici on passe le pointeur Equipe*
+                int ci = choisirCibleAleatoire(joueur);
                 attaquer(actif, &joueur->combattants[ci]);
             }
 
