@@ -1,10 +1,12 @@
-Sasuke     100 20 10 15 12
-Naruto     120 18 12 20 15
-Hinata      90 15 14 25 17
-Sakura     110 16 14 18 15
-Obito       95 17 11 22 19
-Itachi     110 22 12 23 18
-Madara     130 25 15 20 17
-Minato     115 20 13 22 25
-Gai_Maito  105 18 14 18 20
-Rock_Lee   100 19 12 21 22
+//nom pv_max attaque defense agilite vitesse
+Minato      105 18 12 20 30
+Itachi      110 21 15 22 24
+Sasuke      115 22 13 19 22
+Naruto      120 20 14 18 17
+Madara      130 18 18 17 19
+Gai_Maito   105 23 13 18 15
+Rock_Lee    100 25 10 20 18
+Obito       100 19 12 17 18
+Hinata       95 17 14 25 16
+Sakura      110 16 18 15 14
+
