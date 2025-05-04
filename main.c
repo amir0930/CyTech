@@ -19,22 +19,19 @@
 // Format attendu par ligne :
 //   nom pv_max attaque defense agilite vitesse
 // ------------------------------------------------------------------
+// main.c
 void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
     FILE *f = fopen(filename, "r");
-    if (!f) {
-        perror(filename);
-        *taille = 0;
-        return;
-    }
+    if (!f) { perror(filename); *taille = 0; return; }
 
     *taille = 0;
     while (*taille < MAX_DISPO) {
         char name[50];
         int pv_max, atk, def, agi, vit;
         if (fscanf(f, "%49s %d %d %d %d %d",
-                   name, &pv_max, &atk, &def, &agi, &vit) != 6) {
+                   name, &pv_max, &atk, &def, &agi, &vit) != 6)
             break;
-        }
+
         Combattant *c = &liste[*taille];
         strcpy(c->nom, name);
         c->pv_max       = pv_max;
@@ -45,14 +42,14 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
         c->vitesse      = vit;
         c->nb_techniques = 0;
         c->techniques    = NULL;
-        for (int i = 0; i < MAX_EFFETS; i++) {
+        for (int i = 0; i < MAX_EFFETS; i++)
             c->effets[i].tours_restants = 0;
-        }
+
         (*taille)++;
     }
-
     fclose(f);
 }
+
 
 // ------------------------------------------------------------------
 // Creation d'une equipe par selection utilisateur
