@@ -1,81 +1,53 @@
-// cartes.h
 #ifndef CARTES_H
 #define CARTES_H
 
-#include "structures.h"  // Pour Combattant et Effet
+#include "structures.h"
 
-// Carte de jeu
+// Représente une carte de jeu
 typedef struct {
     char nom[50];
     char description[100];
-    int effet_valeur;    // dégâts, soin ou buff
-    int duree;           // durée en tours (0 pour instantané)
-    char type[20];       // "Offensive", "Buff", "Heal"
+    int effet_valeur;  // dégâts, soin ou valeur de buff
+    int duree;         // en tours
+    char type[20];     // "Offensive", "Defensive", "Buff"
 } Carte;
 
-// Deck (pioche)
+// Deck dynamique de cartes
 typedef struct {
-    Carte *cards;        // tableau dynamique de cartes
-    int size;            // nombre total de cartes dans le deck
-    int top;             // index de la prochaine carte à piocher
+    Carte *cartes;
+    int size;   // nombre total de cartes
+    int pos;    // index de la prochaine carte à piocher
 } Deck;
 
-// Main du joueur
+// Main du joueur / de l'IA
 typedef struct {
-    Carte *cards;        // tableau dynamique de cartes en main
-    int size;            // nombre de cartes actuellement en main
-    int capacity;        // capacité du tableau (pour realloc)
+    Carte *cartes;
+    int size;      // nombre de cartes en main
+    int capacity;  // capacité max
 } Hand;
 
-/**
- * Joue une carte sur une cible en appliquant son effet.
- */
-void utiliserCarte(const Carte *carte, Combattant *cible);
+// Charge toutes les cartes d'un fichier (même format que précédemment)
+void chargerCartes(const char *filename, Carte liste[], int *taille);
 
-/**
- * Initialise le deck en chargeant toutes les cartes depuis un fichier CSV
- * (format : nom;description;effet_valeur;duree;type).
- * @param filename Chemin du fichier à lire
- * @param out_size Retourne le nombre de cartes chargées
- * @return         Pointeur vers un Deck alloué dynamiquement
- */
-Deck *init_deck(const char *filename, int *out_size);
-
-/**
- * Mélange le deck (algorithme Fisher–Yates) et remet top à 0.
- */
-void shuffle_deck(Deck *deck);
-
-/**
- * Initialise une main vide avec une capacité initiale donnée.
- * @param initial_capacity Taille de départ de la main
- * @return                 Pointeur vers une Hand allouée dynamiquement
- */
-Hand *init_hand(int initial_capacity);
-
-/**
- * Pioche la carte suivante du deck et l'ajoute à la main.
- */
-void draw_card(Deck *deck, Hand *hand);
-
-/**
- * Joue la carte d'indice idx dans la main, en appliquant son effet sur cible.
- */
-void play_card(Hand *hand, int idx, Combattant *cible);
-
-/**
- * Affiche les cartes actuellement dans la main.
- */
-void afficher_main(const Hand *hand);
-
-/**
- * Libère la mémoire allouée au deck.
- */
+// Initialise et mélange un deck à partir du fichier, renvoie le deck et son nombre de cartes
+Deck* init_deck(const char *filename, int *nCartes);
 void free_deck(Deck *deck);
 
-/**
- * Libère la mémoire allouée à la main.
- */
+// Crée une main vide de capacité donnée
+Hand* init_hand(int capacity);
 void free_hand(Hand *hand);
+
+// Mélange le deck (Fisher–Yates)
+void shuffle_deck(Deck *deck);
+
+// Pioche une carte du deck dans la main
+void draw_card(Deck *deck, Hand *hand);
+
+// Affiche la main à l'écran
+void afficher_main(const Hand *hand);
+
+// Joue la carte d'indice idx contre le combattant cible,
+// puis retire cette carte de la main
+void play_card(Hand *hand, int idx, Combattant *cible);
 
 #endif // CARTES_H
