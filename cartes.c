@@ -1,102 +1,105 @@
-// cartes.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "cartes.h"
 
-/**
- * Joue une carte sur une cible : inflige dégâts, buff ou soin selon le type.
- */
-void utiliserCarte(const Carte *carte, Combattant *cible) {
-    if (cible->pv_courants <= 0) {
-        printf("La carte %s ne peut pas être utilisée car %s est KO !\n",
-               carte->nom, cible->nom);
-        return;
-    }
-
-    printf("Jouer la carte %s : %s\n", carte->nom, carte->description);
-
-    if (strcmp(carte->type, "Offensive") == 0) {
-        // Dégâts directs
-        cible->pv_courants -= carte->effet_valeur;
-        if (cible->pv_courants < 0) cible->pv_courants = 0;
-        printf("%s subit %d dégâts (PV : %d/%d).\n",
-               cible->nom, carte->effet_valeur,
-               cible->pv_courants, cible->pv_max);
-
-    } else if (strcmp(carte->type, "Buff") == 0) {
-        // Bonus d'attaque temporaire
-        for (int i = 0; i < MAX_EFFETS; i++) {
-            if (cible->effets[i].tours_restants == 0) {
-                strncpy(cible->effets[i].nom, carte->nom, 50);
-                cible->effets[i].valeur = carte->effet_valeur;
-                cible->effets[i].tours_restants = carte->duree;
-                cible->attaque += carte->effet_valeur;
-                printf("%s gagne +%d d'attaque pour %d tours.\n",
-                       cible->nom, carte->effet_valeur, carte->duree);
-                break;
-            }
-        }
-
-    } else if (strcmp(carte->type, "Heal") == 0) {
-        // Soins
-        cible->pv_courants += carte->effet_valeur;
-        if (cible->pv_courants > cible->pv_max)
-            cible->pv_courants = cible->pv_max;
-        printf("%s récupère %d PV (PV : %d/%d).\n",
-               cible->nom, carte->effet_valeur,
-               cible->pv_courants, cible->pv_max);
-    } else {
-        printf("Type de carte inconnu : %s\n", carte->type);
-    }
-}
-
-/**
- * Charge un fichier CSV de cartes, format :
- * nom;description;effet_valeur;duree;type
- */
-void chargerCartes(const char *nomFichier, Carte liste[], int *taille) {
-    FILE *f = fopen(nomFichier, "r");
-    if (!f) {
-        perror(nomFichier);
-        *taille = 0;
-        return;
-    }
-
+Deck *init_deck(const char *filename, int *out_size) {
+    // Charge toutes les cartes depuis le fichier
+    Carte buffer[MAX_CARTES];
+    int n = 0;
+    FILE *f = fopen(filename, "r");
+    if (!f) { perror(filename); *out_size = 0; return NULL; }
     char line[256];
-    *taille = 0;
-    while (fgets(line, sizeof(line), f)) {
+    while (fgets(line, sizeof line, f) && n < MAX_CARTES) {
         Carte c;
         if (sscanf(line, "%49[^;];%99[^;];%d;%d;%19s",
                    c.nom, c.description,
                    &c.effet_valeur, &c.duree,
-                   c.type) == 5)
-        {
-            liste[(*taille)++] = c;
-            if (*taille >= MAX_CARTES) {
-                printf("Limite de %d cartes atteinte, arrêt du chargement.\n", MAX_CARTES);
-                break;
-            }
+                   c.type) == 5) {
+            buffer[n++] = c;
         }
     }
     fclose(f);
+
+    // Alloue et copie dans le deck
+    Deck *d = malloc(sizeof *d);
+    d->cards = malloc(sizeof(Carte) * n);
+    memcpy(d->cards, buffer, sizeof(Carte) * n);
+    d->size = n;
+    d->top = 0;
+
+    // Mélange initial
+    shuffle_deck(d);
+    *out_size = n;
+    return d;
 }
 
-/**
- * Affiche la liste des cartes disponibles avec leurs caractéristiques.
- */
-void afficherCartesDisponibles(const Carte cartes[], int taille) {
-    if (taille == 0) {
-        printf("Aucune carte disponible.\n");
+void shuffle_deck(Deck *d) {
+    srand((unsigned)time(NULL));
+    for (int i = d->size - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        Carte tmp = d->cards[i];
+        d->cards[i] = d->cards[j];
+        d->cards[j] = tmp;
+    }
+    d->top = 0;
+}
+
+Hand *init_hand(int initial_capacity) {
+    Hand *h = malloc(sizeof *h);
+    h->cards    = malloc(sizeof(Carte) * initial_capacity);
+    h->size     = 0;
+    h->capacity = initial_capacity;
+    return h;
+}
+
+void draw_card(Deck *deck, Hand *hand) {
+    if (deck->top >= deck->size) {
+        shuffle_deck(deck);
+    }
+    Carte c = deck->cards[deck->top++];
+    // redimensionne si nécessaire
+    if (hand->size == hand->capacity) {
+        hand->capacity *= 2;
+        hand->cards = realloc(hand->cards, sizeof(Carte) * hand->capacity);
+    }
+    hand->cards[hand->size++] = c;
+}
+
+void play_card(Hand *hand, int idx, Combattant *cible) {
+    if (idx < 0 || idx >= hand->size) return;
+    Carte c = hand->cards[idx];
+    // Appliquer l’effet (on réutilise notre fonction)
+    utiliserCarte(&c, cible);
+    // Retirer la carte de la main
+    for (int i = idx + 1; i < hand->size; i++)
+        hand->cards[i-1] = hand->cards[i];
+    hand->size--;
+}
+
+void afficher_main(const Hand *hand) {
+    if (hand->size == 0) {
+        printf("Main vide.\n");
         return;
     }
-    printf("Cartes disponibles :\n");
-    for (int i = 0; i < taille; i++) {
-        printf("%2d: %-20s (Type: %-9s Effet: %+d Durée: %d tours)\n",
+    printf("Votre main :\n");
+    for (int i = 0; i < hand->size; i++) {
+        printf("%2d) %-20s [%s] Effet:%+d Durée:%d\n",
                i,
-               cartes[i].nom,
-               cartes[i].type,
-               cartes[i].effet_valeur,
-               cartes[i].duree);
+               hand->cards[i].nom,
+               hand->cards[i].type,
+               hand->cards[i].effet_valeur,
+               hand->cards[i].duree);
     }
+}
+
+void free_deck(Deck *d) {
+    free(d->cards);
+    free(d);
+}
+
+void free_hand(Hand *h) {
+    free(h->cards);
+    free(h);
 }
