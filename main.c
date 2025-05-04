@@ -126,12 +126,8 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             if (actif->pv_courants <= 0) continue;
 
             int isJoueur = 0;
-            for (int i = 0; i < joueur->taille; i++) {
-                if (&joueur->combattants[i] == actif) {
-                    isJoueur = 1;
-                    break;
-                }
-            }
+            for (int i = 0; i < joueur->taille; i++)
+                if (&joueur->combattants[i] == actif) { isJoueur = 1; break; }
 
             printf("\n>>> Tour de %s <<<\n", actif->nom);
 
@@ -140,13 +136,11 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                 afficher_main(mainJ);
                 printf("Carte a jouer (-1 passer) : ");
                 int ci; scanf("%d", &ci);
-                if (ci >= 0 && ci < mainJ->size)
-                    play_card(mainJ, ci, actif);
+                if (ci >= 0 && ci < mainJ->size) play_card(mainJ, ci, actif);
 
                 printf("Choisir cible IA (0-%d) : ", ia->taille - 1);
                 int idx; scanf("%d", &idx);
-                if (idx >= 0 && idx < ia->taille)
-                    attaquer(actif, &ia->combattants[idx]);
+                if (idx >= 0 && idx < ia->taille) attaquer(actif, &ia->combattants[idx]);
 
             } else {
                 draw_card(deck, mainIA);
@@ -158,25 +152,21 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             }
 
             majEffetsActifs(actif);
-            for (int ti = 0; ti < actif->nb_techniques; ti++) {
+            for (int ti = 0; ti < actif->nb_techniques; ti++)
                 majRecharge(&actif->techniques[ti]);
-            }
         }
 
+        // Purge KO
         int nj = 0;
-        for (int i = 0; i < joueur->taille; i++) {
-            if (joueur->combattants[i].pv_courants > 0) {
+        for (int i = 0; i < joueur->taille; i++)
+            if (joueur->combattants[i].pv_courants > 0)
                 joueur->combattants[nj++] = joueur->combattants[i];
-            }
-        }
         joueur->taille = nj;
 
         int ni = 0;
-        for (int i = 0; i < ia->taille; i++) {
-            if (ia->combattants[i].pv_courants > 0) {
+        for (int i = 0; i < ia->taille; i++)
+            if (ia->combattants[i].pv_courants > 0)
                 ia->combattants[ni++] = ia->combattants[i];
-            }
-        }
         ia->taille = ni;
     }
 
@@ -221,6 +211,7 @@ int main(void) {
     Combattant dispo[MAX_DISPO];
     int nbDispo;
     chargerCombattants(COMBATS_FILE, dispo, &nbDispo);
+    printf("DEBUG: nbDispo = %d\n", nbDispo);
 
     Equipe joueur = { .nom = "Joueur", .taille = 0, .combattants = NULL };
     Equipe ia     = { .nom = "IA",     .taille = 0, .combattants = NULL };
