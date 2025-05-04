@@ -1,7 +1,13 @@
+// Format : nom pv_max attaque defense agilite vitesse nb_techniques
 
-// Format : nom pv_max attaque defense agilite vitesse
-Sasuke 100 20 10 15 12
-Naruto 120 18 12 20 15
-Hinata 90 15 14 25 17
-Sakura 110 16 14 18 15
-Kiba 95 17 11 22 19
+Sasuke     100 20 10 15 12 2
+Naruto     120 18 12 20 15 3
+Hinata      90 15 14 25 17 2
+Sakura     110 16 14 18 15 2
+Obito       95 17 11 22 19 3
+
+Itachi     110 22 12 23 18 3
+Madara     130 25 15 20 17 4
+Minato     115 20 13 22 25 3
+Gai_Maito  105 18 14 18 20 2
+Rock_Lee   100 19 12 21 22 2
