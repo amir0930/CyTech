@@ -9,13 +9,14 @@
 #include "techniques.h"
 #include "cartes.h"
 
-#define MAX_DISPO   10
-#define TEAM_SIZE   5
-#define CARTES_FILE "cartes.txt"
+#define MAX_DISPO    10
+#define TEAM_SIZE    5
+#define CARTES_FILE  "cartes.txt"
 #define COMBATS_FILE "combattants.txt"
 
 // ------------------------------------------------------------------
-// Chargement des combattants
+// Chargement des combattants depuis un fichier texte
+// Format par ligne : nom pv_max attaque defense agilite vitesse
 // ------------------------------------------------------------------
 void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
     FILE *f = fopen(filename, "r");
@@ -43,15 +44,15 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
 }
 
 // ------------------------------------------------------------------
-// Création d’une équipe par sélection
+// Création d’une équipe par sélection utilisateur
 // ------------------------------------------------------------------
 void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
     printf("=== Création de l'équipe %s ===\n", equipe->nom);
-    equipe->taille     = 0;
+    equipe->taille      = 0;
     equipe->combattants = malloc(sizeof(Combattant) * TEAM_SIZE);
 
     while (equipe->taille < TEAM_SIZE) {
-        printf("\nCombattants dispos :\n");
+        printf("\nCombattants disponibles :\n");
         for (int i = 0; i < nbDispo; i++) {
             printf("%2d) %-10s PV:%3d ATK:%2d DEF:%2d VIT:%2d\n",
                    i,
@@ -61,11 +62,12 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
                    dispo[i].defense,
                    dispo[i].vitesse);
         }
-        printf("Votre choix (0-%d) : ", nbDispo-1);
-        int c; if (scanf("%d", &c)!=1) { getchar(); continue; }
-        if (c>=0 && c<nbDispo) {
-            equipe->combattants[equipe->taille++] = dispo[c];
-            printf("  -> %s ajouté\n", dispo[c].nom);
+        printf("Votre choix (0-%d) : ", nbDispo - 1);
+        int choix;
+        if (scanf("%d", &choix) != 1) { getchar(); continue; }
+        if (choix >= 0 && choix < nbDispo) {
+            equipe->combattants[equipe->taille++] = dispo[choix];
+            printf("  -> %s ajouté\n", dispo[choix].nom);
         } else {
             printf("  Choix invalide\n");
         }
@@ -73,16 +75,23 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
 }
 
 // ------------------------------------------------------------------
-// Affichage de l'état de deux équipes
+// Affiche l'état (barres de vie + effets actifs) de deux équipes
 // ------------------------------------------------------------------
 void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
     printf("\n--- ÉTAT DES ÉQUIPES ---\n");
+
+    // Équipe 1
     printf("%s :\n", e1->nom);
-    for (int i = 0; i < e1->taille; i++)
+    for (int i = 0; i < e1->taille; i++) {
         afficherBarreVieAvecEffets(&e1->combattants[i]);
+    }
+
+    // Équipe 2
     printf("\n%s :\n", e2->nom);
-    for (int i = 0; i < e2->taille; i++)
+    for (int i = 0; i < e2->taille; i++) {
         afficherBarreVieAvecEffets(&e2->combattants[i]);
+    }
+
     printf("------------------------\n");
 }
 
@@ -90,18 +99,18 @@ void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
 // Boucle de combat principale
 // ------------------------------------------------------------------
 void boucleCombat(Equipe *joueur, Equipe *ia) {
-    // 1) Organisation des tours
+    // Organisation des tours
     Combattant ordre[TEAM_SIZE * 2];
     int nOrdre;
     organiserTours(joueur, ia, ordre, &nOrdre);
 
-    // 2) Préparation du deck et des mains
+    // Préparation du deck et des mains
     int nCartes;
-    Deck *deck      = init_deck(CARTES_FILE, &nCartes);
-    Hand *mainJ     = init_hand(5);
-    Hand *mainIA    = init_hand(5);
+    Deck *deck   = init_deck(CARTES_FILE, &nCartes);
+    Hand *mainJ  = init_hand(5);
+    Hand *mainIA = init_hand(5);
 
-    // 3) Tour par tour
+    // Tour par tour
     while (joueur->taille > 0 && ia->taille > 0) {
         afficherEtatEquipes(joueur, ia);
 
@@ -109,32 +118,32 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             Combattant *actif = &ordre[t];
             if (actif->pv_courants <= 0) continue;
 
-            // Détection joueur ou IA
-            int isJ = 0;
+            // Détermine si c'est un joueur ou l'IA
+            int isJoueur = 0;
             for (int i = 0; i < joueur->taille; i++)
-                if (&joueur->combattants[i] == actif) { isJ = 1; break; }
+                if (&joueur->combattants[i] == actif) { isJoueur = 1; break; }
 
             printf("\n>>> Tour de %s <<<\n", actif->nom);
 
-            if (isJ) {
-                // Joueur : pioche et joue 1 carte
+            if (isJoueur) {
+                // Joueur : pioche une carte et peut en jouer
                 draw_card(deck, mainJ);
                 afficher_main(mainJ);
-                printf("Carte à jouer (-1=passer) : ");
+                printf("Carte à jouer (-1 pour passer) : ");
                 int ci; scanf("%d", &ci);
                 if (ci >= 0 && ci < mainJ->size)
                     play_card(mainJ, ci, actif);
 
                 // Attaque classique
-                printf("Cible IA (0-%d) : ", ia->taille-1);
-                int idx; scanf("%d",&idx);
-                if (idx>=0 && idx<ia->taille)
+                printf("Cible IA (0-%d) : ", ia->taille - 1);
+                int idx; scanf("%d", &idx);
+                if (idx >= 0 && idx < ia->taille)
                     attaquer(actif, &ia->combattants[idx]);
 
             } else {
                 // IA : pioche et joue aléatoirement
                 draw_card(deck, mainIA);
-                if (mainIA->size > 0 && rand()%2 == 0) {
+                if (mainIA->size > 0 && rand() % 2 == 0) {
                     int ri = rand() % mainIA->size;
                     play_card(mainIA, ri, actif);
                 }
@@ -142,29 +151,34 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                 attaqueIA(ia, joueur, 2);
             }
 
-            // Mise à jour effets et CDs
+            // Mise à jour des effets et cooldowns
             majEffetsActifs(actif);
             for (int ti = 0; ti < actif->nb_techniques; ti++)
                 majRecharge(&actif->techniques[ti]);
         }
 
-        // 4) Purge des KO
-        int nj=0, ni=0;
-        for (int i=0;i<joueur->taille;i++)
-            if (joueur->combattants[i].pv_courants>0)
-                joueur->combattants[nj++]=joueur->combattants[i];
-        for (int i=0;i<ia->taille;i++)
-            if (ia->combattants[i].pv_courants>0)
-                ia->combattants[ni++]=ia->combattants[i];
+        // Élimine les KO des équipes
+        int nj = 0;
+        for (int i = 0; i < joueur->taille; i++)
+            if (joueur->combattants[i].pv_courants > 0)
+                joueur->combattants[nj++] = joueur->combattants[i];
         joueur->taille = nj;
-        ia->taille     = ni;
+
+        int ni = 0;
+        for (int i = 0; i < ia->taille; i++)
+            if (ia->combattants[i].pv_courants > 0)
+                ia->combattants[ni++] = ia->combattants[i];
+        ia->taille = ni;
     }
 
-    // 5) Fin de combat
+    // Fin de combat
     printf("\n=== Combat terminé ===\n");
-    printf(joueur->taille>0 ? "Vous avez gagné !\n" : "L'IA a gagné...\n");
+    if (joueur->taille > 0)
+        printf("Vous avez gagné !\n");
+    else
+        printf("L'IA a gagné...\n");
 
-    // 6) Libération mémoire
+    // Libération de la mémoire
     free_deck(deck);
     free_hand(mainJ);
     free_hand(mainIA);
@@ -173,20 +187,20 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
 // ------------------------------------------------------------------
 // Menu principal
 // ------------------------------------------------------------------
-void menuPrincipal(Equipe *j, Equipe *i) {
+void menuPrincipal(Equipe *joueur, Equipe *ia) {
     int choix;
     do {
         printf("\n--- MENU PRINCIPAL ---\n"
                "1) Lancer combat\n"
-               "2) Voir état\n"
+               "2) Voir état des équipes\n"
                "3) Quitter\n"
-               "Choix : ");
+               "Votre choix : ");
         scanf("%d", &choix);
         switch (choix) {
-            case 1: boucleCombat(j, i); break;
-            case 2: afficherEtatEquipes(j,i); break;
-            case 3: printf("Bye !\n"); break;
-            default: printf("Invalide.\n");
+            case 1: boucleCombat(joueur, ia); break;
+            case 2: afficherEtatEquipes(joueur, ia); break;
+            case 3: printf("Au revoir !\n"); break;
+            default: printf("Choix invalide.\n");
         }
     } while (choix != 3);
 }
@@ -197,22 +211,23 @@ void menuPrincipal(Equipe *j, Equipe *i) {
 int main(void) {
     srand((unsigned)time(NULL));
 
-    // Charger dispo
+    // Chargement des combattants disponibles
     Combattant dispo[MAX_DISPO];
     int nbDispo;
     chargerCombattants(COMBATS_FILE, dispo, &nbDispo);
 
-    // Créer équipes
+    // Création des équipes
     Equipe joueur = { .nom = "Joueur", .taille = 0, .combattants = NULL };
     Equipe ia     = { .nom = "IA",     .taille = 0, .combattants = NULL };
     creerEquipe(&joueur, dispo, nbDispo);
-    creerEquipe(&ia,     dispo, &nbDispo);
+    creerEquipe(&ia,     dispo, nbDispo);
 
-    // Lancer menu
+    // Lancement du menu principal
     menuPrincipal(&joueur, &ia);
 
-    // Nettoyage
+    // Libération des ressources
     free(joueur.combattants);
     free(ia.combattants);
+
     return 0;
 }
