@@ -17,7 +17,7 @@
 // ------------------------------------------------------------------
 // Chargement des combattants depuis un fichier texte
 // Format attendu par ligne :
-//   nom pv_max attaque defense agilite vitesse
+//   nom pv_courants pv_max attaque defense agilite vitesse nb_techniques
 // ------------------------------------------------------------------
 void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
     FILE *f = fopen(filename, "r");
@@ -29,28 +29,26 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
 
     *taille = 0;
     while (*taille < MAX_DISPO) {
-        char name[50];
-        int pv_max, atk, def, agi, vit;
-        if (fscanf(f, "%49s %d %d %d %d %d",
-                   name, &pv_max, &atk, &def, &agi, &vit) != 6)
-        {
+        Combattant *c = &liste[*taille];
+        if (fscanf(f,
+                   "%49s %d %d %d %d %d %d %d",
+                   c->nom,
+                   &c->pv_courants,
+                   &c->pv_max,
+                   &c->attaque,
+                   &c->defense,
+                   &c->agilite,
+                   &c->vitesse,
+                   &c->nb_techniques) != 8) {
             break;
         }
-        Combattant *c = &liste[*taille];
-        strcpy(c->nom, name);
-        c->pv_max       = pv_max;
-        c->pv_courants  = pv_max;
-        c->attaque      = atk;
-        c->defense      = def;
-        c->agilite      = agi;
-        c->vitesse      = vit;
-        c->nb_techniques = 0;
-        c->techniques    = NULL;
-        for (int i = 0; i < MAX_EFFETS; i++)
+        // initialisation des techniques et des effets
+        c->techniques = NULL;
+        for (int i = 0; i < MAX_EFFETS; i++) {
             c->effets[i].tours_restants = 0;
+        }
         (*taille)++;
     }
-
     fclose(f);
 }
 
@@ -65,9 +63,10 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
     while (equipe->taille < TEAM_SIZE) {
         printf("\nCombattants disponibles :\n");
         for (int i = 0; i < nbDispo; i++) {
-            printf("%2d) %-10s PV:%3d ATK:%2d DEF:%2d AGI:%2d VIT:%2d\n",
+            printf("%2d) %-10s PV:%3d/%3d ATK:%2d DEF:%2d AGI:%2d VIT:%2d\n",
                    i,
                    dispo[i].nom,
+                   dispo[i].pv_courants,
                    dispo[i].pv_max,
                    dispo[i].attaque,
                    dispo[i].defense,
@@ -114,9 +113,9 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
     organiserTours(joueur, ia, ordre, &nOrdre);
 
     int nCartes;
-    Deck *deck   = init_deck(CARTES_FILE, &nCartes);
-    Hand *mainJ  = init_hand(5);
-    Hand *mainIA = init_hand(5);
+    Deck *deck     = init_deck(CARTES_FILE, &nCartes);
+    Hand *mainJ    = init_hand(5);
+    Hand *mainIA   = init_hand(5);
 
     while (joueur->taille > 0 && ia->taille > 0) {
         afficherEtatEquipes(joueur, ia);
@@ -125,7 +124,6 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             Combattant *actif = &ordre[t];
             if (actif->pv_courants <= 0) continue;
 
-            // Détermine si c'est un joueur ou l'IA
             int isJoueur = 0;
             for (int i = 0; i < joueur->taille; i++)
                 if (&joueur->combattants[i] == actif) { isJoueur = 1; break; }
