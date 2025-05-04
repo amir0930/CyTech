@@ -4,12 +4,40 @@
 #include <time.h>
 #include "cartes.h"
 
-#define MAX_CARTES  100  // taille max pour chargement temporaire
+#define MAX_CARTES 100
 
 // ------------------------------------------------------------------
-// Chargement brut des cartes depuis un fichier texte
-// Format d'une ligne :
-//   nom;description;effet_valeur;duree;type
+// Applique l'effet d'une carte sur un combattant cible
+// ------------------------------------------------------------------
+void utiliserCarte(const Carte *carte, Combattant *cible) {
+    if (strcmp(carte->type, "Offensive") == 0) {
+        cible->pv_courants -= carte->effet_valeur;
+        if (cible->pv_courants < 0) cible->pv_courants = 0;
+        printf("%s subit %d degats (PV : %d/%d)\n",
+               cible->nom, carte->effet_valeur,
+               cible->pv_courants, cible->pv_max);
+
+    } else if (strcmp(carte->type, "Defensive") == 0) {
+        cible->pv_courants += carte->effet_valeur;
+        if (cible->pv_courants > cible->pv_max)
+            cible->pv_courants = cible->pv_max;
+        printf("%s recupere %d PV (PV : %d/%d)\n",
+               cible->nom, carte->effet_valeur,
+               cible->pv_courants, cible->pv_max);
+
+    } else if (strcmp(carte->type, "Buff") == 0) {
+        cible->attaque += carte->effet_valeur;
+        printf("%s gagne +%d d'attaque pour %d tours\n",
+               cible->nom, carte->effet_valeur, carte->duree);
+
+    } else {
+        printf("Type de carte inconnu : %s\n", carte->type);
+    }
+}
+
+// ------------------------------------------------------------------
+// Chargement des cartes depuis fichier
+// Format : nom;description;valeur;duree;type
 // ------------------------------------------------------------------
 void chargerCartes(const char *filename, Carte liste[], int *taille) {
     FILE *f = fopen(filename, "r");
@@ -21,15 +49,14 @@ void chargerCartes(const char *filename, Carte liste[], int *taille) {
     *taille = 0;
     char line[256];
     while (fgets(line, sizeof(line), f) && *taille < MAX_CARTES) {
-        Carte *c = &liste[(*taille)];
-        // retire le '\n'
+        // enlève le '\n'
         line[strcspn(line, "\r\n")] = '\0';
         sscanf(line, "%49[^;];%99[^;];%d;%d;%19s",
-               c->nom,
-               c->description,
-               &c->effet_valeur,
-               &c->duree,
-               c->type);
+               liste[*taille].nom,
+               liste[*taille].description,
+               &liste[*taille].effet_valeur,
+               &liste[*taille].duree,
+               liste[*taille].type);
         (*taille)++;
     }
     fclose(f);
@@ -48,16 +75,16 @@ void shuffle_deck(Deck *deck) {
 }
 
 // ------------------------------------------------------------------
-// Initialise un deck et le mélange
+// Initialise un deck à partir d'un fichier, puis le mélange
 // ------------------------------------------------------------------
 Deck* init_deck(const char *filename, int *nCartes) {
-    Carde listeTemp[MAX_CARTES];
+    Carte listeTemp[MAX_CARTES];
     int nTemp;
     chargerCartes(filename, listeTemp, &nTemp);
 
     Deck *d = malloc(sizeof(Deck));
-    d->size = nTemp;
-    d->pos  = 0;
+    d->size   = nTemp;
+    d->pos    = 0;
     d->cartes = malloc(sizeof(Carte) * nTemp);
     memcpy(d->cartes, listeTemp, sizeof(Carte) * nTemp);
 
@@ -74,7 +101,7 @@ void free_deck(Deck *deck) {
 }
 
 // ------------------------------------------------------------------
-// Main initialement vide
+// Initialise une main vide de capacité donnée
 // ------------------------------------------------------------------
 Hand* init_hand(int capacity) {
     Hand *h = malloc(sizeof(Hand));
@@ -90,12 +117,12 @@ void free_hand(Hand *hand) {
 }
 
 // ------------------------------------------------------------------
-// Pioche une carte si possible
+// Pioche une carte du deck dans la main
 // ------------------------------------------------------------------
 void draw_card(Deck *deck, Hand *hand) {
-    if (deck->pos >= deck->size) return;          // plus de cartes
-    if (hand->size >= hand->capacity) return;     // main pleine
-    hand->cartes[hand->size++] = deck->cartes[deck->pos++];
+    if (deck->pos < deck->size && hand->size < hand->capacity) {
+        hand->cartes[hand->size++] = deck->cartes[deck->pos++];
+    }
 }
 
 // ------------------------------------------------------------------
@@ -112,14 +139,14 @@ void afficher_main(const Hand *hand) {
 }
 
 // ------------------------------------------------------------------
-// Joue une carte et retire de la main
+// Joue une carte et la retire de la main
 // ------------------------------------------------------------------
 void play_card(Hand *hand, int idx, Combattant *cible) {
     if (idx < 0 || idx >= hand->size) return;
     Carte c = hand->cartes[idx];
     utiliserCarte(&c, cible);
 
-    // retrait de la main
+    // suppression de la carte jouée
     for (int j = idx; j < hand->size - 1; j++) {
         hand->cartes[j] = hand->cartes[j+1];
     }
