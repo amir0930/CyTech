@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <string.h>  // pour strcmp
 #include "structures.h"
 #include "combat.h"
 #include "techniques.h"
@@ -116,6 +116,7 @@ void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
 // ------------------------------------------------------------------
 // Boucle de combat principale
 // ------------------------------------------------------------------
+
 void boucleCombat(Equipe *joueur, Equipe *ia) {
     Combattant ordre[TEAM_SIZE * 2];
     int nOrdre;
@@ -133,14 +134,21 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             Combattant *actif = &ordre[t];
             if (actif->pv_courants <= 0) continue;
 
-            int isJ = 0;
+            // ---- TEST mis à jour ----
+            int isJoueur = 0;
             for (int i = 0; i < joueur->taille; i++) {
-                if (&joueur->combattants[i] == actif) { isJ = 1; break; }
+                if (strcmp(joueur->combattants[i].nom,
+                           actif->nom) == 0) {
+                    isJoueur = 1;
+                    break;
+                }
             }
+            // -------------------------
 
             printf("\n>>> Tour de %s <<<\n", actif->nom);
 
-            if (isJ) {
+            if (isJoueur) {
+                // Interaction pour le joueur
                 draw_card(deck, mainJ);
                 afficher_main(mainJ);
                 printf("Carte a jouer (-1 passer) : ");
@@ -154,6 +162,7 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                     attaquer(actif, &ia->combattants[idx]);
 
             } else {
+                // IA agit automatiquement
                 draw_card(deck, mainIA);
                 if (mainIA->size > 0 && rand() % 2 == 0) {
                     int ri = rand() % mainIA->size;
@@ -162,6 +171,7 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                 attaqueIA(ia, joueur, 2);
             }
 
+            // Mise à jour des effets et cooldowns
             majEffetsActifs(actif);
             for (int ti = 0; ti < actif->nb_techniques; ti++) {
                 majRecharge(&actif->techniques[ti]);
