@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <locale.h>
 
 #include "structures.h"
 #include "combat.h"
@@ -43,7 +42,6 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
                    &c->nb_techniques) != 8) {
             break;
         }
-        // Initialisation des techniques et des effets
         c->techniques = NULL;
         for (int i = 0; i < MAX_EFFETS; i++) {
             c->effets[i].tours_restants = 0;
@@ -54,10 +52,10 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
 }
 
 // ------------------------------------------------------------------
-// Création d’une équipe par sélection utilisateur
+// Creation d'une equipe par selection utilisateur
 // ------------------------------------------------------------------
 void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
-    printf("=== Création de l'équipe %s ===\n", equipe->nom);
+    printf("=== Creation de l'equipe %s ===\n", equipe->nom);
     equipe->taille      = 0;
     equipe->combattants = malloc(sizeof(Combattant) * TEAM_SIZE);
 
@@ -81,7 +79,7 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
         }
         if (choix >= 0 && choix < nbDispo) {
             equipe->combattants[equipe->taille++] = dispo[choix];
-            printf("  -> %s ajouté\n", dispo[choix].nom);
+            printf("  -> %s ajoute\n", dispo[choix].nom);
         } else {
             printf("  Choix invalide\n");
         }
@@ -89,10 +87,10 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int nbDispo) {
 }
 
 // ------------------------------------------------------------------
-// Affiche l'état (barres de vie + effets actifs) de deux équipes
+// Affiche l'etat (barres de vie + effets) de deux equipes
 // ------------------------------------------------------------------
 void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
-    printf("\n--- ÉTAT DES ÉQUIPES ---\n");
+    printf("\n--- ETAT DES EQUIPES ---\n");
 
     printf("%s :\n", e1->nom);
     for (int i = 0; i < e1->taille; i++) {
@@ -140,7 +138,7 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             if (isJoueur) {
                 draw_card(deck, mainJ);
                 afficher_main(mainJ);
-                printf("Carte à jouer (-1 passer) : ");
+                printf("Carte a jouer (-1 passer) : ");
                 int ci; scanf("%d", &ci);
                 if (ci >= 0 && ci < mainJ->size)
                     play_card(mainJ, ci, actif);
@@ -165,7 +163,6 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
             }
         }
 
-        // Purge KO
         int nj = 0;
         for (int i = 0; i < joueur->taille; i++) {
             if (joueur->combattants[i].pv_courants > 0) {
@@ -183,11 +180,11 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
         ia->taille = ni;
     }
 
-    printf("\n=== Combat terminé ===\n");
+    printf("\n=== Combat termine ===\n");
     if (joueur->taille > 0)
-        printf("Vous avez gagné !\n");
+        printf("Vous avez gagne !\n");
     else
-        printf("L'IA a gagné...\n");
+        printf("L'IA a gagne...\n");
 
     free_deck(deck);
     free_hand(mainJ);
@@ -202,7 +199,7 @@ void menuPrincipal(Equipe *joueur, Equipe *ia) {
     do {
         printf("\n--- MENU PRINCIPAL ---\n"
                "1) Lancer combat\n"
-               "2) Voir état des équipes\n"
+               "2) Voir etat des equipes\n"
                "3) Quitter\n"
                "Votre choix : ");
         scanf("%d", &choix);
@@ -216,10 +213,9 @@ void menuPrincipal(Equipe *joueur, Equipe *ia) {
 }
 
 // ------------------------------------------------------------------
-// Point d’entrée
+// Point d'entree
 // ------------------------------------------------------------------
 int main(void) {
-    setlocale(LC_ALL, "");
     srand((unsigned)time(NULL));
 
     Combattant dispo[MAX_DISPO];
