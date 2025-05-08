@@ -1,4 +1,3 @@
-//nom;description;effet_valeur;duree;type
 Rasengan;Inflige 30 degats directs;30;1;Offensive
 Chidori;Inflige 35 degats directs;35;1;Offensive
 Bunshin;Crée 2 clones (+10 agilite);10;2;Buff
