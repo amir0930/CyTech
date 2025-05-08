@@ -1,4 +1,3 @@
-// techniques.c
 #include <stdio.h>
 #include <string.h>
 #include "techniques.h"
@@ -7,22 +6,23 @@ void appliquerEffet(Combattant *cible, Technique *tech) {
     switch (tech->type) {
         case TECH_DAMAGE:
             cible->pv_courants -= tech->value;
-            printf("%s subit %d dégâts.\n", cible->nom, tech->value);
+            if (cible->pv_courants < 0) cible->pv_courants = 0;
+            printf("%s subit %d degats.\n", cible->nom, tech->value);
             break;
         case TECH_HEAL:
-            cible->pv_courants = (cible->pv_courants + tech->value > cible->pv_max)
-                ? cible->pv_max
-                : cible->pv_courants + tech->value;
-            printf("%s récupère %d PV.\n", cible->nom, tech->value);
+            cible->pv_courants += tech->value;
+            if (cible->pv_courants > cible->pv_max)
+                cible->pv_courants = cible->pv_max;
+            printf("%s recupere %d PV.\n", cible->nom, tech->value);
             break;
         case TECH_BUFF:
             cible->attaque += tech->value;
-            printf("%s gagne +%d d'attaque pour %d tours.\n",
+            printf("%s gagne +%d ATK pour %d tours.\n",
                    cible->nom, tech->value, tech->cooldown);
             break;
         case TECH_DEBUFF:
             cible->defense -= tech->value;
-            printf("%s perd %d de défense pour %d tours.\n",
+            printf("%s perd %d DEF pour %d tours.\n",
                    cible->nom, tech->value, tech->cooldown);
             break;
     }
@@ -41,7 +41,6 @@ void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *tech
 }
 
 void majRecharge(Technique *tech) {
-    if (tech->current_cd > 0) {
-        tech->current_cd--;
-    }
+    if (tech->current_cd > 0) tech->current_cd--;
 }
+
