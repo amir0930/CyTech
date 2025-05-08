@@ -1,4 +1,3 @@
-//nom pv_max attaque defense agilite vitesse
 Minato      105 18 12 20 30
 Itachi      110 21 15 22 24
 Sasuke      115 22 13 19 22
