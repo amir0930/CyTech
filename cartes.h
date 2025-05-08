@@ -3,45 +3,30 @@
 
 #include "structures.h"
 
-// Représente une carte
-typedef struct {
-    char nom[50];
-    char description[100];
-    int effet_valeur;  // dégâts, soin ou buff
-    int duree;         // en tours
-    char type[20];     // "Offensive", "Defensive", "Buff"
-} Carte;
+#define MAX_CARTES 100
 
-// Deck dynamique de cartes
 typedef struct {
     Carte *cartes;
-    int size;   // nombre de cartes dans le deck
-    int pos;    // index de la prochaine carte à piocher
+    int size;
 } Deck;
 
-// Main du joueur / de l'IA
 typedef struct {
     Carte *cartes;
-    int size;      // nb de cartes en main
-    int capacity;  // capacité max
+    int size;
+    int capacity;
 } Hand;
 
-// Prototype pour l'utilisation d'une carte
-void utiliserCarte(const Carte *carte, Combattant *cible);
+Deck*    init_deck(const char *filename, int *out_count);
+void     free_deck(Deck *d);
+Hand*    init_hand(int capacity);
+void     free_hand(Hand *h);
+void     draw_card(Deck *d, Hand *h);
+void     afficher_main(const Hand *h);
+void     play_card(Hand *h, int idx, Combattant *cible);
 
-// Chargement depuis fichier
-void chargerCartes(const char *filename, Carte liste[], int *taille);
-
-// Gestion du deck
-Deck* init_deck(const char *filename, int *nCartes);
-void free_deck(Deck *deck);
-void shuffle_deck(Deck *deck);
-
-// Gestion de la main
-Hand* init_hand(int capacity);
-void free_hand(Hand *hand);
-void draw_card(Deck *deck, Hand *hand);
-void afficher_main(const Hand *hand);
-void play_card(Hand *hand, int idx, Combattant *cible);
+void     utiliserCarte(const Carte *carte, Combattant *cible);
+void     chargerCartes(const char *nomFichier, Carte liste[], int *taille);
+void     afficherCartesDisponibles(const Carte cartes[], int tailleCartes);
 
 #endif // CARTES_H
+
