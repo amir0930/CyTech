@@ -1,0 +1,5 @@
+Pour une carte : 
+nom ; description ; effet_valeur ; duree ; type
+
+Pour un combattant :
+nom pv_max attaque defense agilite vitesse
