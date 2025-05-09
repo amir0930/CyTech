@@ -1,18 +1,20 @@
 CC       = gcc
 CFLAGS   = -Wall -Wextra -std=c11 -g
-SRCS     = main.c combat.c techniques.c cartes.c
+
+PROG     = projet
+SRCS     = main.c combat.c techniques.c cartes.c jeu.c
 OBJS     = $(SRCS:.c=.o)
-DEPS     = structures.h combat.h techniques.h cartes.h
+DEPS     = structures.h combat.h techniques.h cartes.h jeu.h
 
 .PHONY: all clean
 
-all: projet
+all: $(PROG)
 
-projet: $(OBJS)
+$(PROG): $(OBJS)
 	$(CC) -o $@ $^
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f projet $(OBJS)
+	rm -f $(PROG) $(OBJS)
