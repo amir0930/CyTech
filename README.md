@@ -1,8 +1,11 @@
 Bienvenue dans CY-StormFighters, un jeu de combat tactique au tour par tour, inspiré de l'univers de Naruto. Créez vos équipes, jouez vos cartes, et combattez jusqu’à la victoire !
 Menu principal
+
 Une fois le jeu lancé, vous avez plusieurs options :
+
 Mode 1 - Joueur vs IA :
 Affrontez un adversaire contrôlé par l’ordinateur.
+
 Mode 2 - Joueur vs Joueur (Local) :
 Affrontez un ami en local sur le même ordinateur.
 Voir état des équipes :
