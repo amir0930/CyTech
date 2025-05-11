@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "techniques.h"
-
+//applique l’effet d’une technique (tech) sur un combattant (cible).
 void appliquerEffet(Combattant *cible, Technique *tech) {
     switch (tech->type) {
         case TECH_DAMAGE:
@@ -27,7 +27,7 @@ void appliquerEffet(Combattant *cible, Technique *tech) {
             break;
     }
 }
-
+//permet à un combattant (attaquant) d'utiliser une technique sur une cible (cible), en tenant compte du cooldown.
 void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *tech) {
     if (tech->current_cd > 0) {
         printf("%s ne peut pas utiliser %s (CD restant : %d tours).\n",
@@ -39,7 +39,8 @@ void utiliserTechnique(Combattant *attaquant, Combattant *cible, Technique *tech
     appliquerEffet(cible, tech);
     tech->current_cd = tech->cooldown;
 }
-
+//met à jour le cooldown d’une technique s’il n’est pas à 0.
+// decremente de 1
 void majRecharge(Technique *tech) {
     if (tech->current_cd > 0) tech->current_cd--;
 }
