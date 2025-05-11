@@ -4,6 +4,7 @@
 #include <time.h>
 #include "cartes.h"
 
+//Initialise un paquet de cartes (deck) en lisant les cartes depuis un fichier texte.
 Deck* init_deck(const char *filename, int *out_count) {
     Carte tmp[MAX_CARTES];
     int n = 0;
@@ -22,13 +23,13 @@ Deck* init_deck(const char *filename, int *out_count) {
     if (out_count) *out_count = n;
     return d;
 }
-
+//Libère la mémoire associée à un Deck
 void free_deck(Deck *d) {
     if (!d) return;
     free(d->cartes);
     free(d);
 }
-
+//Crée une main (main de cartes du joueur) avec une capacité donnée
 Hand* init_hand(int capacity) {
     Hand *h = malloc(sizeof(Hand));
     h->size = 0;
@@ -36,19 +37,19 @@ Hand* init_hand(int capacity) {
     h->cartes = malloc(sizeof(Carte) * capacity);
     return h;
 }
-
+//Libère la mémoire d’une main (Hand).
 void free_hand(Hand *h) {
     if (!h) return;
     free(h->cartes);
     free(h);
 }
-
+//Pioche une carte du Deck vers la Hand
 void draw_card(Deck *d, Hand *h) {
     if (!d || !h) return;
     if (d->size <= 0 || h->size >= h->capacity) return;
     h->cartes[h->size++] = d->cartes[--d->size];
 }
-
+//Affiche les cartes actuellement en main avec leurs effets.
 void afficher_main(const Hand *h) {
     printf("Votre main (%d cartes) :\n", h->size);
     for (int i = 0; i < h->size; i++) {
@@ -58,7 +59,7 @@ void afficher_main(const Hand *h) {
                c->effet_valeur, c->duree);
     }
 }
-
+//Joue une carte de la main (indice idx) sur un combattant (cible).
 void play_card(Hand *h, int idx, Combattant *cible) {
     if (!h || idx < 0 || idx >= h->size) return;
     utiliserCarte(&h->cartes[idx], cible);
@@ -66,7 +67,7 @@ void play_card(Hand *h, int idx, Combattant *cible) {
         h->cartes[j] = h->cartes[j + 1];
     h->size--;
 }
-
+//Applique l’effet d’une carte sur un combattant.
 void utiliserCarte(const Carte *carte, Combattant *cible) {
     if (cible->pv_courants <= 0) {
         printf("La carte %s ne peut pas etre utilisee car %s est deja KO !\n",
@@ -90,7 +91,7 @@ void utiliserCarte(const Carte *carte, Combattant *cible) {
                cible->pv_courants, cible->pv_max);
     }
 }
-
+//Charge les cartes depuis un fichier texte dans un tableau de Carte
 void chargerCartes(const char *nomFichier, Carte liste[], int *taille) {
     FILE *file = fopen(nomFichier, "r");
     if (!file) {
@@ -112,7 +113,7 @@ void chargerCartes(const char *nomFichier, Carte liste[], int *taille) {
     }
     fclose(file);
 }
-
+//Affiche la liste des cartes chargées disponibles (en dehors du jeu).
 void afficherCartesDisponibles(const Carte cartes[], int tailleCartes) {
     if (tailleCartes == 0) {
         printf("Aucune carte disponible.\n");
