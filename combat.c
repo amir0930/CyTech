@@ -44,7 +44,7 @@ void organiserTours(Equipe *e1, Equipe *e2, Combattant ordre[], int *n) {
     qsort(ordre, *n, sizeof(Combattant), comparerVitesse);
 }
 
-// Mise à jour et expiration des effets
+// Mise à jour et fin des effets
 void majEffetsActifs(Combattant *c) {
     for (int i = 0; i < MAX_EFFETS; i++) {
         if (c->effets[i].tours_restants > 0) {
