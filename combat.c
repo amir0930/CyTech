@@ -12,16 +12,20 @@
 #define C_CYAN    "\033[1;36m"
 #define C_GREEN   "\033[1;32m"
 
-// Compareur pour qsort : vitesse décroissante
+// utilisée par qsort pour trier les combattants du plus rapide au plus lent
+//compare vitesse des combattants
 static int comparerVitesse(const void *a, const void *b) {
     const Combattant *A = a, *B = b;
     return B->vitesse - A->vitesse;
 }
 
 // Attaque classique
+//Calcule les dégâts infligés par l’attaquant à la cible.
+//Si les dégâts sont positifs, ils sont retirés aux PV de la cible.
+//Affiche un message coloré selon le résultat.
 void attaquer(Combattant *attaquant, Combattant *cible) {
     int degats = attaquant->attaque - cible->defense;
-    if (degats > 0) {
+    if (degats > 0) {                                       
         cible->pv_courants -= degats;
         if (cible->pv_courants < 0) cible->pv_courants = 0;
         printf("\n%s%s%s attaque %s%s%s et inflige %s%d%s degats !\n",
@@ -36,6 +40,7 @@ void attaquer(Combattant *attaquant, Combattant *cible) {
 }
 
 // Construit l'ordre de passage des tours selon la vitesse
+// rempli un tableau de combattants, trie vitesse
 void organiserTours(Equipe *e1, Equipe *e2, Combattant ordre[], int *n) {
     int idx = 0;
     for (int i = 0; i < e1->taille; i++) ordre[idx++] = e1->combattants[i];
@@ -44,7 +49,9 @@ void organiserTours(Equipe *e1, Equipe *e2, Combattant ordre[], int *n) {
     qsort(ordre, *n, sizeof(Combattant), comparerVitesse);
 }
 
-// Mise à jour et fin des effets
+// Parcourt tous les effets actifs sur un combattant.
+//Décrémente leur durée.
+//Si un effet expire, affiche un message et retire son bonus/malus.
 void majEffetsActifs(Combattant *c) {
     for (int i = 0; i < MAX_EFFETS; i++) {
         if (c->effets[i].tours_restants > 0) {
