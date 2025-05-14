@@ -18,7 +18,8 @@
 #define C_RED      "\033[1;31m"
 
 // ------------------------------------------------------------------
-// chargerCombattants : lit jusqu’à MAX_DISPO lignes de nom et stats
+// chargerCombattants : lit combattant.txt 
+// remplit un tableau de structure Combattant
 // ------------------------------------------------------------------
 void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
     FILE *fp = fopen(filename, "r");
@@ -30,7 +31,7 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
         if (fscanf(fp, "%49s %d %d %d %d %d", 
                    name, &pv_max, &atk, &def, &agi, &vit) != 6)
             break;
-        Combattant *c = &liste[(*taille)++];
+        Combattant *c = &liste[(*taille)++];          // tableau de structure combattant
         strcpy(c->nom, name);
         c->pv_max       = pv_max;
         c->pv_courants  = pv_max;
