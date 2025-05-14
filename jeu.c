@@ -48,7 +48,10 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
 }
 
 // ------------------------------------------------------------------
-// creerEquipe : affiche la liste dispo[], demande des choix 0..nbDispo-1
+// creerEquipe : affiche la liste dispo[], demande choisir perso de 0 a nbDispo-1
+// et le retire de dispo[] pour l’ajouter à l’équipe
+// jusqu’à TEAM_SIZE combattants ou plus de dispo[].
+// Affiche l’équipe créée
 // ------------------------------------------------------------------
 void creerEquipe(Equipe *equipe, Combattant dispo[], int *nbDispo) {
     printf("%s=== Creation de l'equipe %s ===%s\n",
