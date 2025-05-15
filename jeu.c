@@ -144,7 +144,7 @@ void boucleCombat(Equipe *joueur, Equipe *ia) {
                         Carte *carte = &mainJ->cartes[ci];
                         Combattant *cibleCarte = NULL;
 
-                        if (strcmp(carte->type, "Offensive") == 0) {
+                        if (strcmp(carte->type, "Offensive") == 0) { //compare chaine
                             printf("%sChoisir cible IA (0-%d) : %s",
                                    C_GREEN, ia->taille - 1, C_RESET);
                             int idx; scanf("%d", &idx); while(getchar()!='\n');
