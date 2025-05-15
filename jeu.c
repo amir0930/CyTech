@@ -17,10 +17,10 @@
 #define C_YELLOW   "\033[1;33m"
 #define C_RED      "\033[1;31m"
 
-// ------------------------------------------------------------------
+
 // chargerCombattants : lit combattant.txt 
 // remplit un tableau de structure Combattant
-// ------------------------------------------------------------------
+
 void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
     FILE *fp = fopen(filename, "r");
     if (!fp) { perror(filename); *taille = 0; return; }
