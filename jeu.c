@@ -47,12 +47,10 @@ void chargerCombattants(const char *filename, Combattant liste[], int *taille) {
     fclose(fp);
 }
 
-// ------------------------------------------------------------------
 // creerEquipe : affiche la liste dispo[], demande choisir perso de 0 a nbDispo-1
 // et le retire de dispo[] pour l’ajouter à l’équipe
 // jusqu’à TEAM_SIZE combattants ou plus de dispo[].
 // Affiche l’équipe créée
-// ------------------------------------------------------------------
 void creerEquipe(Equipe *equipe, Combattant dispo[], int *nbDispo) {
     printf("%s=== Creation de l'equipe %s ===%s\n",
            C_BLUE, equipe->nom, C_RESET);
@@ -86,9 +84,8 @@ void creerEquipe(Equipe *equipe, Combattant dispo[], int *nbDispo) {
     }
 }
 
-// ------------------------------------------------------------------
 // afficherEtatEquipes : barres de vie + effets colorés
-// ------------------------------------------------------------------
+
 void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
     printf("\n%s--- ETAT DES EQUIPES --- %s\n", C_BLUE, C_RESET);
     printf("%s :\n", e1->nom);
@@ -100,9 +97,9 @@ void afficherEtatEquipes(Equipe *e1, Equipe *e2) {
     printf("%s------------------------%s\n", C_BLUE, C_RESET);
 }
 
-// ------------------------------------------------------------------
-// boucleCombat (solo IA) – implémentation complète
-// ------------------------------------------------------------------
+
+// boucleCombat (solo IA) 
+
 void boucleCombat(Equipe *joueur, Equipe *ia) {
     Combattant ordre[TEAM_SIZE * 2];
     int nOrdre;
